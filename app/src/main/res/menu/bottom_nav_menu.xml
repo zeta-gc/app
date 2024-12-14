@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="Allenati"
+        android:id="gains"
+        android:icon="@drawable/muscle_gain_svgrepo_com"/>
+    <item android:title="Scheda"
+        android:id="scheda"
+        android:icon="@drawable/baseline_checklist_24"/>
+
+</menu>

@@ -11,5 +11,7 @@ class UserProfileActivity : AppCompatActivity() {
         enableEdgeToEdge()
         val auth = FirebaseAuth.getInstance()
         setContentView(R.layout.activity_user_profile)
+
+
     }
 }
