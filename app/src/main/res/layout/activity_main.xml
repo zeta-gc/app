@@ -16,7 +16,7 @@
         android:layout_height="68dp"
         android:drawableStart="@drawable/user_svgrepo_com"
         android:ems="10"
-        android:hint="Inserisci username"
+        android:hint="Inserisci email"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -54,21 +54,22 @@
         app:layout_constraintTop_toBottomOf="@+id/pass"
         app:layout_constraintVertical_bias="0.223" />
 
-    <Button
-        android:layout_width="159dp"
-        android:layout_height="33dp"
+    <TextView
+        android:id="@+id/resetPass"
+        android:layout_width="175dp"
+        android:layout_height="25dp"
         android:layout_marginTop="76dp"
         android:backgroundTint="@color/white"
         android:text="Password dimenticata?"
         android:textAlignment="textStart"
         android:textColor="@color/black"
-        android:textSize="10sp"
+        android:textSize="15dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_bias="0.067"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/pass"
-        app:layout_constraintVertical_bias="0.003" />
+        app:layout_constraintVertical_bias="0.0" />
 
     <TextView
         android:layout_width="50dp"

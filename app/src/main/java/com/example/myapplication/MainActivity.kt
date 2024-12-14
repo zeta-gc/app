@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -22,6 +23,7 @@ class MainActivity : AppCompatActivity() {
         val textUsername : EditText = findViewById(R.id.user)
         val textPassword : EditText = findViewById(R.id.pass)
         val textLogin : Button = findViewById(R.id.accessBt)
+        val textResetPass : TextView = findViewById(R.id.resetPass)
 
         val textRegister : Button = findViewById(R.id.registerButton)
         textRegister.setOnClickListener {
@@ -58,7 +60,10 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                 }
-
+        textResetPass.setOnClickListener{
+            val intentReset = Intent(this, ResetActivity::class.java)
+            startActivity(intentReset)
+        }
 
 
 
