@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    tools:context=".MainActivity"
+    >
+
+
+    <EditText
+        android:id="@+id/user"
+        android:layout_width="388dp"
+        android:layout_height="68dp"
+        android:drawableStart="@drawable/user_svgrepo_com"
+        android:ems="10"
+        android:hint="Inserisci username"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.478"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.355"
+        android:background="@drawable/border"/>
+
+    <EditText
+        android:id="@+id/pass"
+        android:layout_width="391dp"
+        android:layout_height="68dp"
+        android:drawableStart="@drawable/lock_svgrepo_com"
+        android:hint="Inserisci password"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.55"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/user"
+        app:layout_constraintVertical_bias="0.069" />
+
+
+<Button
+        android:id="@+id/accessBt"
+        android:layout_width="181dp"
+        android:layout_height="57dp"
+        android:drawableLeft="@drawable/gym_svgrepo_com"
+        android:text="Accedi"
+        android:textSize="24sp"
+        android:textAlignment="textStart"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/pass"
+        app:layout_constraintVertical_bias="0.223" />
+
+    <Button
+        android:layout_width="159dp"
+        android:layout_height="33dp"
+        android:layout_marginTop="76dp"
+        android:backgroundTint="@color/white"
+        android:text="Password dimenticata?"
+        android:textAlignment="textStart"
+        android:textColor="@color/black"
+        android:textSize="10sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/pass"
+        app:layout_constraintVertical_bias="0.003" />
+
+    <TextView
+        android:layout_width="50dp"
+        android:layout_height="21dp"
+        android:backgroundTint="@color/white"
+        android:text="Oppure"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/accessBt"
+        app:layout_constraintVertical_bias="0.092" />
+
+    <Button
+        android:id="@+id/registerButton"
+        android:layout_width="175dp"
+        android:layout_height="56dp"
+        android:text="Registrati"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/pass"
+        app:layout_constraintVertical_bias="0.618" />
+</androidx.constraintlayout.widget.ConstraintLayout>

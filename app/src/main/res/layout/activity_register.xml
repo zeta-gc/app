@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <EditText
+            android:id="@+id/mailUser"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:ems="10"
+            android:inputType="text"
+            android:hint="Email" />
+
+        <EditText
+            android:id="@+id/passUser"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:ems="10"
+            android:inputType="text"
+            android:hint="Password" />
+
+        <EditText
+            android:id="@+id/passUserConf"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:ems="10"
+            android:inputType="text"
+            android:hint="Conferma password" />
+
+
+        <RadioGroup
+            android:id="@+id/radioG"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/uomo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="uomo" />
+
+            <RadioButton
+                android:id="@+id/donna"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="donna" />
+
+        </RadioGroup>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/Breg"
+        android:layout_width="118dp"
+        android:layout_height="71dp"
+        android:text="Registrati"
+        android:textSize="15sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
+</androidx.constraintlayout.widget.ConstraintLayout>
