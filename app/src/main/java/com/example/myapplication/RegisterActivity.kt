@@ -1,6 +1,7 @@
 package com.example.myapplication
 
 import android.os.Bundle
+import android.util.Log // Import the Log class
 import android.widget.Button
 import android.widget.EditText
 import android.widget.RadioButton
@@ -10,6 +11,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 class RegisterActivity: AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,8 +32,12 @@ class RegisterActivity: AppCompatActivity() {
             val pass = password.text.toString()
             val confP = confPass.text.toString()
             val genderId = radioG.checkedRadioButtonId
-            val radioGBtn: RadioButton = findViewById(genderId)
-
+            if (genderId == -1) {
+                Toast.makeText(this, "Seleziona un genere", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            val gender = findViewById<RadioButton>(genderId).text.toString()
+            Log.d("genere", "Selezionato:$gender")
             if (mail.isEmpty())
                 Toast.makeText(this, "Inserisci email", Toast.LENGTH_SHORT).show()
             else if (pass.isEmpty())
@@ -38,8 +45,16 @@ class RegisterActivity: AppCompatActivity() {
             else if (pass != confP)
                 Toast.makeText(this, "Le password non coincidono", Toast.LENGTH_SHORT).show()
             else {
-                Toast.makeText(this, "fin qui ci siamo", Toast.LENGTH_SHORT).show()
-                registerUser(mail, pass,auth)
+
+                registerUser(mail, pass,gender, auth) { isSuccess, errorMessage ->
+                    if (isSuccess) {
+                        Toast.makeText(this, "Registrazione completata", Toast.LENGTH_SHORT).show()
+                        // Navigate to the next activity if needed
+                    } else {
+                        Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
+                    }
+                }
+
 
             }
 
@@ -47,25 +62,48 @@ class RegisterActivity: AppCompatActivity() {
 
     }
 
-    private fun registerUser(email: String, pass: String, auth: FirebaseAuth) {
-        Toast.makeText(this, "fin qui ci siamo", Toast.LENGTH_SHORT).show()
-        auth.createUserWithEmailAndPassword(email,pass).addOnCompleteListener{
-            Toast.makeText(this, "fin qui ci siamo ${it.isSuccessful}", Toast.LENGTH_SHORT).show()
-            if (it.isSuccessful){
-                Toast.makeText(this, "reg compl",Toast.LENGTH_SHORT).show()
+
+
+// ...
+
+
+
+
+    private fun registerUser(
+        email: String,
+        pass: String,
+        gender:String,
+        auth: FirebaseAuth,
+        callback: (Boolean, String?) -> Unit
+    ) {
+        auth.createUserWithEmailAndPassword(email, pass)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val userId = auth.currentUser?.uid
+                    val database = FirebaseDatabase.getInstance("https://gymapp-48c7e-default-rtdb.europe-west1.firebasedatabase.app/")
+                    val userRef = database.getReference("users").child(userId ?: "unknown")
+                    auth.currentUser?.sendEmailVerification()
+                    val userData = mapOf(
+                        "email" to email,
+                        "gender" to gender// Replace with actual gender
+                    )
+
+                    userRef.setValue(userData)
+                        .addOnCompleteListener { dbTask ->
+                            if (dbTask.isSuccessful) {
+                                callback(true, null)
+                            } else {
+                                callback(false, dbTask.exception?.message ?: "Database error")
+                            }
+                        }
+
+                } else {
+                    val error = task.exception?.message ?: "Registrazione fallita"
+                    callback(false, error)
+                }
             }
-        }
-
-
-        /*
-                    val intent = Intent(this, UserProfileActivity::class.java)
-                    intent.flags =
-                        Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-                    startActivity(intent)
-                    finish()
-                    */
-
     }
+
 
 }
 
