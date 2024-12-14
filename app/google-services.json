@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "1085614060993",
-    "project_id": "progetto-b5dbd",
-    "storage_bucket": "progetto-b5dbd.firebasestorage.app"
+    "project_number": "395673631217",
+    "project_id": "gymapp-48c7e",
+    "storage_bucket": "gymapp-48c7e.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1085614060993:android:ec5ef797d7ec43dc1b2b40",
+        "mobilesdk_app_id": "1:395673631217:android:b53901d94d3147e9ec6c50",
         "android_client_info": {
           "package_name": "com.example.myapplication"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAW55DNEVuMZj2JlxOH8LJTK-oc-QVJhmQ"
+          "current_key": "AIzaSyBXXPU9pbiu14OHA2GAH8Wkz0QYFKY6tXw"
         }
       ],
       "services": {
