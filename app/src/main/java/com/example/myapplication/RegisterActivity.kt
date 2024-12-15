@@ -62,13 +62,6 @@ class RegisterActivity: AppCompatActivity() {
 
     }
 
-
-
-// ...
-
-
-
-
     private fun registerUser(
         email: String,
         pass: String,

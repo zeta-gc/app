@@ -2,9 +2,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:title="Allenati"
+        android:id="@+id/homeA"
         android:icon="@drawable/muscle_gain_svgrepo_com"/>
 
     <item android:title="Scheda"
+        android:id="@+id/scheda"
         android:icon="@drawable/baseline_checklist_24"/>
 
 </menu>
