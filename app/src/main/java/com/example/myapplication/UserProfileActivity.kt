@@ -6,21 +6,18 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.core.content.PackageManagerCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.core.Context
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanIntentResult
 import com.journeyapps.barcodescanner.ScanOptions
 
 class UserProfileActivity : AppCompatActivity() {
     private val richiestaPermesso = registerForActivityResult(ActivityResultContracts.RequestPermission()){
-        isGranted ->
+            isGranted ->
         if (isGranted){
             apriCamera()
         }
@@ -44,13 +41,11 @@ class UserProfileActivity : AppCompatActivity() {
                     cambiaSchermata(SchedaFragment())
                 }
             }
-        true
+            true
         }
 
-        val scanner : FloatingActionButton = findViewById(R.id.floatingActionButton)
-        scanner.setOnClickListener{
-            verificaPermessi(this)
-        }
+
+
     }
     fun cambiaSchermata (layout: Fragment){
         val fm : FragmentManager = supportFragmentManager
@@ -58,7 +53,7 @@ class UserProfileActivity : AppCompatActivity() {
         transaction.replace(R.id.frameLayout,layout)
         transaction.commit()
     }
-    private fun verificaPermessi(contesto : android.content.Context){
+    public fun verificaPermessi(contesto : android.content.Context){
         if (ContextCompat.checkSelfPermission(contesto,android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED){
             apriCamera()
         }
@@ -79,14 +74,21 @@ class UserProfileActivity : AppCompatActivity() {
         scanL.launch(options)
     }
     private val scanL = registerForActivityResult(ScanContract()){
-        result : ScanIntentResult ->
+            result : ScanIntentResult ->
         run {
+
             if (result.contents == null) {
                 Toast.makeText(this, "Cancelled", Toast.LENGTH_SHORT).show()
             }
             else {
-
+                Toast.makeText(this, result.contents, Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    companion object {
+        fun verificaPermessi(homeFragment: android.content.Context) {
+            verificaPermessi(homeFragment)
         }
     }
 
