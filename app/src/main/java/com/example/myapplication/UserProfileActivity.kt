@@ -1,6 +1,7 @@
 package com.example.myapplication
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -9,11 +10,17 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
+import com.google.gson.Gson
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanIntentResult
 import com.journeyapps.barcodescanner.ScanOptions
+import kotlinx.coroutines.launch
+import java.io.IOException
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 class UserProfileActivity : AppCompatActivity() {
     private val richiestaPermesso = registerForActivityResult(ActivityResultContracts.RequestPermission()){
@@ -64,27 +71,91 @@ class UserProfileActivity : AppCompatActivity() {
             richiestaPermesso.launch(android.Manifest.permission.CAMERA)
         }
     }
-    private fun apriCamera () {
+    private fun apriCamera() {
         val options = ScanOptions()
         options.setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-        options.setPrompt("Scan QR code")
+        options.setPrompt("Scansiona il QR code")
         options.setBeepEnabled(true)
         options.setBarcodeImageEnabled(true)
         options.setOrientationLocked(false)
         scanL.launch(options)
     }
-    private val scanL = registerForActivityResult(ScanContract()){
-            result : ScanIntentResult ->
-        run {
 
-            if (result.contents == null) {
-                Toast.makeText(this, "Cancelled", Toast.LENGTH_SHORT).show()
-            }
-            else {
-                Toast.makeText(this, result.contents, Toast.LENGTH_SHORT).show()
+    private val scanL = registerForActivityResult(ScanContract()) { result: ScanIntentResult ->
+        if (result.contents == null) {
+            Toast.makeText(this, "Scansione annullata", Toast.LENGTH_SHORT).show()
+        } else {
+            val scannedUrl = result.contents
+            Toast.makeText(this, "URL scansionato: $scannedUrl", Toast.LENGTH_SHORT).show()
+
+            // Effettua la chiamata all'API
+            inviaRichiestaAPI(scannedUrl)
+        }
+    }
+
+    private suspend fun ottieniToken(): String? = suspendCoroutine { continuation ->
+        val user = FirebaseAuth.getInstance().currentUser
+
+        user?.getIdToken(true)?.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result?.token
+                Log.d("qrscanner", "TOKEN! $token")
+                continuation.resume(token) // Restituisce il token
+            } else {
+                Log.d("qrscanner", "Errore nel recupero del token")
+                continuation.resume(null) // Restituisce null in caso di errore
             }
         }
     }
+    private fun inviaRichiestaAPI(url: String) {
+
+
+        // Ottieni il token (puoi recuperarlo da Firebase o da una variabile salvata)
+        lifecycleScope.launch {
+            val token = ottieniToken()
+            if (token == null) {
+                Toast.makeText(this@UserProfileActivity, "Impossibile recuperare il token", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+            val client = okhttp3.OkHttpClient()
+        Log.d("qrscanner", "TOKEN $token")
+        // Costruisci la richiesta con il token nell'header
+        val request = okhttp3.Request.Builder()
+            .url(url)
+            .addHeader("Authorization", "Bearer $token") // Aggiungi il token all'header
+            .build()
+
+        // Esegui la richiesta in un thread separato
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                runOnUiThread {
+                    Toast.makeText(this@UserProfileActivity, "Errore: ${e.message}", Toast.LENGTH_SHORT).show()
+                    e.message?.let { Log.d("qrscanner", it) }
+                }
+            }
+
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                response.use {
+                    if (!response.isSuccessful) {
+                        runOnUiThread {
+                            Toast.makeText(this@UserProfileActivity, "Errore API: ${response.code}", Toast.LENGTH_SHORT).show()
+                            Log.d("qrscanner", "$response.code")
+                        }
+                    } else {
+                        val responseData = response.body?.string()
+                        val apiResponse = Gson().fromJson(responseData, ApiResponse::class.java)
+                        runOnUiThread {
+                            Toast.makeText(this@UserProfileActivity, "Risposta APa: ${apiResponse.message}", Toast.LENGTH_LONG).show()
+                            Log.d("qrscanner", "$responseData")
+                        }
+                    }
+                }
+            }
+        })
+        }
+    }
+
+
 
     companion object {
         fun verificaPermessi(homeFragment: android.content.Context) {
