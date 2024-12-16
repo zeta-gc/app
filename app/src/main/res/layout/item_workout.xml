@@ -8,10 +8,14 @@
     android:background="?android:attr/selectableItemBackground">
 
     <androidx.cardview.widget.CardView
+        android:id="@+id/cardworkout"
+        android:clickable="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:elevation="8dp"
+        android:focusable="true"
         app:cardCornerRadius="12dp"
+        android:foreground="?android:attr/selectableItemBackground"
         android:layout_margin="8dp">
 
         <LinearLayout

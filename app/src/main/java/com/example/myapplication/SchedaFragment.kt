@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -8,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -121,6 +123,15 @@ class SchedaFragment : Fragment() {
             override fun onBindViewHolder(holder: WorkoutViewHolder, position: Int, model: Workout) {
                 Log.d("SchedaFragment", "Binding workout: ${model.titolo}, ${model.descrizione}")
                 holder.bind(model)
+
+                // Set the click listener
+                holder.cardView.setOnClickListener {
+                    // Handle item click
+                    Log.d("SchedaFragment", "Workout clicked: ${model.titolo}")
+                    // You can perform actions here, like navigating to a detail screen
+                    // Example: Open a new Fragment or Activity with workout details
+                    Toast.makeText(requireContext(), "CLICK ${model.titolo}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
@@ -147,7 +158,7 @@ class SchedaFragment : Fragment() {
         private val titoloTextView: TextView = itemView.findViewById(R.id.titoloTextView)
         private val descrizioneTextView: TextView = itemView.findViewById(R.id.descrizioneTextView)
         private val imageView: ImageView = itemView.findViewById(R.id.imageView)
-
+        val cardView: CardView = itemView.findViewById(R.id.cardworkout)  // Reference to the CardView
         fun bind(workout: Workout) {
             Log.d("WorkoutViewHolder", "Binding workout: ${workout.titolo}, ${workout.descrizione}")
             titoloTextView.text = workout.titolo
