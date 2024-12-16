@@ -1,25 +1,19 @@
 package com.example.myapplication
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+class SchedaFragment : Fragment(), MyRecyclerViewAdapter.ItemClickListener {
 
-/**
- * A simple [Fragment] subclass.
- * Use the [SchedaFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
-class SchedaFragment : Fragment() {
-    // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
+    private lateinit var adapter: MyRecyclerViewAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,6 +21,20 @@ class SchedaFragment : Fragment() {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
         }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // Sample data to populate the RecyclerView
+        val animalNames = arrayListOf("Horse", "Cow", "Camel", "Sheep", "Goat", "EDOARDO", "MATTIA")
+
+        // Set up the RecyclerView
+        val recyclerView: RecyclerView = view.findViewById(R.id.rvAnimals)
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        adapter = MyRecyclerViewAdapter(requireContext(), animalNames)
+        adapter.setClickListener(this)
+        recyclerView.adapter = adapter
     }
 
     override fun onCreateView(
@@ -37,16 +45,15 @@ class SchedaFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_scheda, container, false)
     }
 
+    override fun onItemClick(view: View, position: Int) {
+        val item = adapter.getItem(position)
+        Toast.makeText(requireContext(), "CLICCATO $item", Toast.LENGTH_LONG).show()
+    }
+
     companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment SchedaFragment.
-         */
-        // TODO: Rename and change types and number of parameters
+        private const val ARG_PARAM1 = "param1"
+        private const val ARG_PARAM2 = "param2"
+
         @JvmStatic
         fun newInstance(param1: String, param2: String) =
             SchedaFragment().apply {
