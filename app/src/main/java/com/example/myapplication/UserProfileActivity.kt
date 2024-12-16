@@ -86,7 +86,6 @@ class UserProfileActivity : AppCompatActivity() {
             Toast.makeText(this, "Scansione annullata", Toast.LENGTH_SHORT).show()
         } else {
             val scannedUrl = result.contents
-            Toast.makeText(this, "URL scansionato: $scannedUrl", Toast.LENGTH_SHORT).show()
 
             // Effettua la chiamata all'API
             inviaRichiestaAPI(scannedUrl)
@@ -138,7 +137,14 @@ class UserProfileActivity : AppCompatActivity() {
                 response.use {
                     if (!response.isSuccessful) {
                         runOnUiThread {
-                            Toast.makeText(this@UserProfileActivity, "Errore API: ${response.code}", Toast.LENGTH_SHORT).show()
+                            when(response.code){
+                                403 ->   Toast.makeText(this@UserProfileActivity, "NON HAI INGRESSI DISPONIBILI", Toast.LENGTH_SHORT).show()
+                                404 ->  Toast.makeText(this@UserProfileActivity, "Errore API: UTENTE NON REGISTRATO", Toast.LENGTH_SHORT).show()
+                                else->{
+                                    Toast.makeText(this@UserProfileActivity, "Errore API: ${response.code}", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+
                             Log.d("qrscanner", "$response.code")
                         }
                     } else {

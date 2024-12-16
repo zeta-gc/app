@@ -4,12 +4,14 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.squareup.picasso.Picasso
 
 class MyRecyclerViewAdapter(
     context: Context,
-    private val mData: List<String>
+    private val mData: Array<Workout>
 ) : RecyclerView.Adapter<MyRecyclerViewAdapter.ViewHolder>() {
 
     private val mInflater: LayoutInflater = LayoutInflater.from(context)
@@ -24,7 +26,13 @@ class MyRecyclerViewAdapter(
     // Binds the data to the TextView in each row
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val animal = mData[position]
-        holder.myTextView.text = animal
+        holder.myTextView.text = animal.titolo
+        holder.description.text= animal.descrizione
+        Picasso.get()
+            .load(animal.url)
+            .placeholder(R.drawable.squatbilanciere) // Immagine di placeholder
+            .error(R.drawable.errore_immagine)       // Immagine di errore
+            .into(holder.imageURL)
     }
 
     // Total number of rows
@@ -33,6 +41,8 @@ class MyRecyclerViewAdapter(
     // Stores and recycles views as they are scrolled off screen
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
         val myTextView: TextView = itemView.findViewById(R.id.workoutname)
+        val description: TextView = itemView.findViewById(R.id.workoutDescription)
+        val imageURL: ImageView = itemView.findViewById(R.id.workoutImage)
 
         init {
             itemView.setOnClickListener(this)
@@ -44,7 +54,7 @@ class MyRecyclerViewAdapter(
     }
 
     // Convenience method for getting data at click position
-    fun getItem(id: Int): String = mData[id]
+    fun getItem(id: Int): Workout = mData[id]
 
     // Allows click events to be caught
     fun setClickListener(itemClickListener: ItemClickListener) {

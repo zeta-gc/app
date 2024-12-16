@@ -37,6 +37,8 @@ android {
 }
 
 dependencies {
+    implementation("com.firebaseui:firebase-ui-database:8.0.0")
+    implementation("com.squareup.picasso:picasso:2.8")
     implementation("androidx.recyclerview:recyclerview:1.2.0")
     implementation("com.google.code.gson:gson:2.8.9")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
