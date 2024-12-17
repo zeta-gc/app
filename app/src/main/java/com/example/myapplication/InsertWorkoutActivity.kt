@@ -34,6 +34,10 @@ class InsertWorkoutActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 // Show an AlertDialog to ask for confirmation
+                if (selectedWorkouts ==  sharedPreferences.getStringSet("selectedWorkouts", mutableSetOf())) {
+                    finish()
+                    return
+                }
                 val builder = AlertDialog.Builder(this@InsertWorkoutActivity)
                 builder.setTitle("Conferma")
                 builder.setMessage("Hai delle modifiche non salvate")
@@ -88,7 +92,6 @@ class InsertWorkoutActivity : AppCompatActivity() {
                     }
 
                     // Salva gli esercizi selezionati nelle SharedPreferences
-                    saveSelectedWorkouts()
                 }
             }
         }
@@ -108,7 +111,7 @@ class InsertWorkoutActivity : AppCompatActivity() {
     }
 
     // Carica gli esercizi selezionati da SharedPreferences
-    private fun loadSelectedWorkouts() {
+    public fun loadSelectedWorkouts() {
         val savedWorkouts = sharedPreferences.getStringSet("selectedWorkouts", mutableSetOf())
         if (savedWorkouts != null) {
             selectedWorkouts.addAll(savedWorkouts)

@@ -1,7 +1,9 @@
 package com.example.myapplication
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -79,16 +81,19 @@ import com.squareup.picasso.Picasso
             }
     }
 }*/
-
 class SchedaFragment : Fragment() {
 
     private lateinit var adapter: FirebaseRecyclerAdapter<Workout, WorkoutViewHolder>
     private val workoutList = mutableListOf<Workout>()  // Lista per memorizzare i dati
+    private lateinit var sharedPreferences: SharedPreferences
+    private val selectedWorkouts = mutableSetOf<String>()  // Set per memorizzare gli esercizi selezionati
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        sharedPreferences = requireContext().getSharedPreferences("SelectedWorkouts", Context.MODE_PRIVATE)
         val view = inflater.inflate(R.layout.fragment_scheda, container, false)
 
         val recyclerView: RecyclerView = view.findViewById(R.id.rvAnimals)
@@ -103,14 +108,19 @@ class SchedaFragment : Fragment() {
 
         adapter = object : FirebaseRecyclerAdapter<Workout, WorkoutViewHolder>(options) {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WorkoutViewHolder {
-                Log.d("SchedaFragment", "onCreateViewHolder")
                 val view = LayoutInflater.from(parent.context)
                     .inflate(R.layout.item_workout, parent, false)
                 return WorkoutViewHolder(view)
             }
 
             override fun onBindViewHolder(holder: WorkoutViewHolder, position: Int, model: Workout) {
-                holder.bind(model)
+                // Mostra solo gli esercizi selezionati
+                if (selectedWorkouts.contains(model.titolo)) {
+                    holder.bind(model)
+                    holder.cardView.visibility = View.VISIBLE  // Mostra la card
+                } else {
+                    holder.cardView.visibility = View.GONE  // Nascondi la card se non è selezionata
+                }
 
                 // Gestione del click sugli elementi
                 holder.cardView.setOnClickListener {
@@ -123,6 +133,7 @@ class SchedaFragment : Fragment() {
 
         return view
     }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val scanner: FloatingActionButton = view.findViewById(R.id.floatingActionButton)
@@ -130,25 +141,33 @@ class SchedaFragment : Fragment() {
             val intent = Intent(requireContext(), InsertWorkoutActivity::class.java)
             startActivity(intent)
         }
-
     }
-
+    public fun loadSelectedWorkouts() {
+        val savedWorkouts = sharedPreferences.getStringSet("selectedWorkouts", mutableSetOf())
+        if (savedWorkouts != null) {
+            selectedWorkouts.clear()
+            selectedWorkouts.addAll(savedWorkouts)
+        }
+    }
     override fun onStart() {
         super.onStart()
-        Log.d("SchedaFragment", "onStart")
         if (adapter != null)
             adapter.startListening()
-
+       loadSelectedWorkouts()  // Cari
+        adapter.notifyDataSetChanged()  // Inizia ad ascoltare i dati quando il Fragment è visibile
     }
+
     override fun onResume() {
         super.onResume()
+        loadSelectedWorkouts()  // Cari
+        adapter.startListening()
         adapter.notifyDataSetChanged()  // Inizia ad ascoltare i dati quando il Fragment è visibile
     }
 
     override fun onPause() {
         super.onPause()
-        Log.d("SchedaFragment", "onPause")
-        adapter.stopListening()  // Ferma l'ascolto quando il Fragment non è visibile
+        if (adapter != null)
+            adapter.stopListening()  // Ferma l'ascolto quando il Fragment non è visibile
     }
 
     // Metodo per caricare i dati da Firebase
@@ -158,7 +177,6 @@ class SchedaFragment : Fragment() {
             if (task.isSuccessful) {
                 val dataSnapshot = task.result
                 if (dataSnapshot != null) {
-                    Log.d("FirebaseData", "inserendo i dati")
                     workoutList.clear()  // Pulisci la lista prima di aggiungere nuovi dati
                     for (snapshot in dataSnapshot.children) {
                         val workout = snapshot.getValue(Workout::class.java)
@@ -193,6 +211,4 @@ class SchedaFragment : Fragment() {
         }
     }
 }
-
-
 
