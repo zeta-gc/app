@@ -38,6 +38,9 @@
             android:name=".ResetActivity"
             android:exported="true"
             />
+        <activity
+            android:name=".InsertWorkoutActivity"
+            android:exported="true" />
         <activity android:name="com.journeyapps.barcodescanner.CaptureActivity"
             android:screenOrientation="fullSensor"
             tools:replace="android:screenOrientation"/>

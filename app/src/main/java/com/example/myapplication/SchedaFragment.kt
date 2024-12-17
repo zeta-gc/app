@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -15,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.firebase.ui.database.FirebaseRecyclerAdapter
 import com.firebase.ui.database.FirebaseRecyclerOptions
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.database.FirebaseDatabase
 import com.squareup.picasso.Picasso
 
@@ -81,95 +83,116 @@ import com.squareup.picasso.Picasso
 class SchedaFragment : Fragment() {
 
     private lateinit var adapter: FirebaseRecyclerAdapter<Workout, WorkoutViewHolder>
+    private val workoutList = mutableListOf<Workout>()  // Lista per memorizzare i dati
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_scheda, container, false)
 
-        // Reference to Firebase Realtime Database
-        val databaseReference = FirebaseDatabase.getInstance("https://gymapp-48c7e-default-rtdb.europe-west1.firebasedatabase.app/").getReference("workouts")
-        databaseReference.get().addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val dataSnapshot = task.result
-                if (dataSnapshot != null) {
-                    Log.d("FirebaseData", "Data: ${dataSnapshot.value}")
-                } else {
-                    Log.d("FirebaseData", "No data found")
-                }
-            } else {
-                Log.e("FirebaseData", "Error fetching data", task.exception)
-            }
-        }
+        val recyclerView: RecyclerView = view.findViewById(R.id.rvAnimals)
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        // Query to fetch all workouts
+        val databaseReference = FirebaseDatabase.getInstance("https://gymapp-48c7e-default-rtdb.europe-west1.firebasedatabase.app/").getReference("workouts")
         val query = databaseReference
 
-        // Configure FirebaseRecyclerOptions
         val options = FirebaseRecyclerOptions.Builder<Workout>()
             .setQuery(query, Workout::class.java)
             .build()
 
-        // Initialize the adapter
         adapter = object : FirebaseRecyclerAdapter<Workout, WorkoutViewHolder>(options) {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WorkoutViewHolder {
+                Log.d("SchedaFragment", "onCreateViewHolder")
                 val view = LayoutInflater.from(parent.context)
                     .inflate(R.layout.item_workout, parent, false)
                 return WorkoutViewHolder(view)
             }
 
             override fun onBindViewHolder(holder: WorkoutViewHolder, position: Int, model: Workout) {
-                Log.d("SchedaFragment", "Binding workout: ${model.titolo}, ${model.descrizione}")
                 holder.bind(model)
 
-                // Set the click listener
+                // Gestione del click sugli elementi
                 holder.cardView.setOnClickListener {
-                    // Handle item click
-                    Log.d("SchedaFragment", "Workout clicked: ${model.titolo}")
-                    // You can perform actions here, like navigating to a detail screen
-                    // Example: Open a new Fragment or Activity with workout details
                     Toast.makeText(requireContext(), "CLICK ${model.titolo}", Toast.LENGTH_SHORT).show()
                 }
             }
         }
 
-        // Set up RecyclerView
-        val recyclerView: RecyclerView = view.findViewById(R.id.rvAnimals)
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
 
         return view
     }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val scanner: FloatingActionButton = view.findViewById(R.id.floatingActionButton)
+        scanner.setOnClickListener {
+            val intent = Intent(requireContext(), InsertWorkoutActivity::class.java)
+            startActivity(intent)
+        }
+
+    }
 
     override fun onStart() {
         super.onStart()
-        adapter.startListening()
+        Log.d("SchedaFragment", "onStart")
+        if (adapter != null)
+            adapter.startListening()
+
+    }
+    override fun onResume() {
+        super.onResume()
+        adapter.notifyDataSetChanged()  // Inizia ad ascoltare i dati quando il Fragment è visibile
     }
 
-    override fun onStop() {
-        super.onStop()
-        adapter.stopListening()
+    override fun onPause() {
+        super.onPause()
+        Log.d("SchedaFragment", "onPause")
+        adapter.stopListening()  // Ferma l'ascolto quando il Fragment non è visibile
     }
 
-    // ViewHolder class to bind data
+    // Metodo per caricare i dati da Firebase
+    private fun loadDataFromFirebase() {
+        val databaseReference = FirebaseDatabase.getInstance("https://gymapp-48c7e-default-rtdb.europe-west1.firebasedatabase.app/").getReference("workouts")
+        databaseReference.get().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val dataSnapshot = task.result
+                if (dataSnapshot != null) {
+                    Log.d("FirebaseData", "inserendo i dati")
+                    workoutList.clear()  // Pulisci la lista prima di aggiungere nuovi dati
+                    for (snapshot in dataSnapshot.children) {
+                        val workout = snapshot.getValue(Workout::class.java)
+                        if (workout != null) {
+                            workoutList.add(workout)
+                        }
+                    }
+                    adapter.notifyDataSetChanged()  // Notifica all'adapter che i dati sono cambiati
+                }
+            } else {
+                Log.e("FirebaseData", "Error fetching data", task.exception)
+            }
+        }
+    }
+
+    // ViewHolder per il RecyclerView
     class WorkoutViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val titoloTextView: TextView = itemView.findViewById(R.id.titoloTextView)
         private val descrizioneTextView: TextView = itemView.findViewById(R.id.descrizioneTextView)
         private val imageView: ImageView = itemView.findViewById(R.id.imageView)
-        val cardView: CardView = itemView.findViewById(R.id.cardworkout)  // Reference to the CardView
+        val cardView: CardView = itemView.findViewById(R.id.cardworkout)
+
         fun bind(workout: Workout) {
-            Log.d("WorkoutViewHolder", "Binding workout: ${workout.titolo}, ${workout.descrizione}")
             titoloTextView.text = workout.titolo
             descrizioneTextView.text = workout.descrizione
 
-            // Load image using Picasso
             Picasso.get()
                 .load(workout.url)
-                .placeholder(R.drawable.squatbilanciere) // Optional: Placeholder image
-                .error(R.drawable.errore_immagine) // Optional: Error image
+                .placeholder(R.drawable.squatbilanciere) // Placeholder
+                .error(R.drawable.errore_immagine) // Immagine di errore
                 .into(imageView)
         }
     }
 }
+
+
+
