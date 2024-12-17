@@ -87,7 +87,7 @@ class SchedaFragment : Fragment() {
     private val workoutList = mutableListOf<Workout>()  // Lista per memorizzare i dati
     private lateinit var sharedPreferences: SharedPreferences
     private val selectedWorkouts = mutableSetOf<String>()  // Set per memorizzare gli esercizi selezionati
-
+    private lateinit var noSelectedWorkoutsText: TextView  // Riferimento al TextView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -95,7 +95,7 @@ class SchedaFragment : Fragment() {
     ): View? {
         sharedPreferences = requireContext().getSharedPreferences("SelectedWorkouts", Context.MODE_PRIVATE)
         val view = inflater.inflate(R.layout.fragment_scheda, container, false)
-
+        noSelectedWorkoutsText = view.findViewById(R.id.noSelectedWorkoutsText)
         val recyclerView: RecyclerView = view.findViewById(R.id.rvAnimals)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
@@ -147,6 +147,13 @@ class SchedaFragment : Fragment() {
         if (savedWorkouts != null) {
             selectedWorkouts.clear()
             selectedWorkouts.addAll(savedWorkouts)
+        }
+
+        // Verifica se la lista è vuota e mostra il testo appropriato
+        if (selectedWorkouts.isEmpty()) {
+            noSelectedWorkoutsText.visibility = View.VISIBLE  // Mostra il messaggio
+        } else {
+            noSelectedWorkoutsText.visibility = View.GONE  // Nascondi il messaggio
         }
     }
     override fun onStart() {
