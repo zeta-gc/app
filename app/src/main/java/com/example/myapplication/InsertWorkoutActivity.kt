@@ -1,6 +1,7 @@
 package com.example.myapplication
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
@@ -15,49 +16,33 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.firebase.ui.database.FirebaseRecyclerAdapter
 import com.firebase.ui.database.FirebaseRecyclerOptions
+import com.google.common.reflect.TypeToken
 import com.google.firebase.database.FirebaseDatabase
+import com.google.gson.Gson
 import com.squareup.picasso.Picasso
 
 class InsertWorkoutActivity : AppCompatActivity() {
     private lateinit var adapter: FirebaseRecyclerAdapter<Workout, WorkoutViewHolder>
-    private val workoutList = mutableListOf<Workout>()
+    private val selectedWorkouts = mutableSetOf<String>()
+    private var workoutList: MutableList<Workout> = mutableListOf()  // Lista dei workout associata alla scheda
     private lateinit var sharedPreferences: SharedPreferences
-    private val selectedWorkouts = mutableSetOf<String>()  // Set per memorizzare gli esercizi selezionati
-
+    lateinit var nomescheda: String
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_insert_workout)
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                // Show an AlertDialog to ask for confirmation
-                if (selectedWorkouts ==  sharedPreferences.getStringSet("selectedWorkouts", mutableSetOf())) {
-                    finish()
-                    return
-                }
-                val builder = AlertDialog.Builder(this@InsertWorkoutActivity)
-                builder.setTitle("Conferma")
-                builder.setMessage("Hai delle modifiche non salvate")
+        sharedPreferences = getSharedPreferences("SchedePrefs", Context.MODE_PRIVATE)
+        Log.d("DEBUG", sharedPreferences.all.toString())
+        nomescheda = intent.getStringExtra("scheda") as String
+        Log.d("DEBUGSCHEDA", nomescheda)
+        // Ricevi la lista di workout passata dall'intent
+        workoutList = intent.getSerializableExtra("workoutList") as? MutableList<Workout> ?: mutableListOf()
 
-                // "Conferma" button
-                builder.setPositiveButton("Salva modifiche") { _, _ ->
-                    saveSelectedWorkouts()  // Save the selected workouts
-                    finish()  // Close the activity
-                }
 
-                // "Annulla" button
-                builder.setNegativeButton("Esci senza salvare") { dialog, _ ->
-                    finish()
-                }
-
-                builder.show()  // Show the dialog
-            }
-        })
-
-        sharedPreferences = getSharedPreferences("SelectedWorkouts", Context.MODE_PRIVATE)
 
         val recyclerView: RecyclerView = findViewById(R.id.rvAnimals)
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -79,30 +64,50 @@ class InsertWorkoutActivity : AppCompatActivity() {
             override fun onBindViewHolder(holder: WorkoutViewHolder, position: Int, model: Workout) {
                 holder.bind(model)
 
-                // Controlla se l'esercizio è selezionato e aggiorna lo stato del CheckBox
+                // Gestisci la selezione del checkBox
                 holder.checkBox.isChecked = selectedWorkouts.contains(model.titolo)
 
                 holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
                     if (isChecked) {
                         selectedWorkouts.add(model.titolo)  // Aggiungi all'elenco degli esercizi selezionati
-                        Toast.makeText(this@InsertWorkoutActivity, "Selezionato: ${model.titolo}", Toast.LENGTH_SHORT).show()
+                        workoutList.add(model)  // Aggiungi l'esercizio alla lista dei workout
                     } else {
                         selectedWorkouts.remove(model.titolo)  // Rimuovi dall'elenco degli esercizi selezionati
-                        Toast.makeText(this@InsertWorkoutActivity, "Deselezionato: ${model.titolo}", Toast.LENGTH_SHORT).show()
+                        workoutList.remove(model)  // Rimuovi l'esercizio dalla lista dei workout
                     }
-
-                    // Salva gli esercizi selezionati nelle SharedPreferences
                 }
             }
         }
 
         recyclerView.adapter = adapter
+
+        // Gestione del tasto "Indietro" (back)
+        val callback: OnBackPressedCallback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (selectedWorkouts.isNotEmpty()) {
+                    val builder = AlertDialog.Builder(this@InsertWorkoutActivity)
+                    builder.setTitle("Attenzione")
+                    builder.setMessage("Sei sicuro di voler uscire senza salvare i workout selezionati?")
+                    builder.setPositiveButton("Si") { _, _ ->
+                        updateWorkoutList()  // Aggiorna la lista dei workout selezionati
+                        finish()  // Chiudi l'attività
+                    }
+                    builder.setNegativeButton("No") { dialog, _ ->
+                        dialog.dismiss()  // Chiudi il dialogo senza fare nulla
+                    }
+                    builder.show()
+                } else {
+                    finish()  // Se non ci sono workout selezionati, esci direttamente
+                }
+            }
+        }
+
+        onBackPressedDispatcher.addCallback(this, callback)  // Aggiungi il callback per il tasto "Indietro"
     }
 
     override fun onStart() {
         super.onStart()
         adapter.startListening()  // Inizia l'ascolto dei dati
-        loadSelectedWorkouts()  // Carica gli esercizi selezionati dalla cache
     }
 
     override fun onPause() {
@@ -110,25 +115,34 @@ class InsertWorkoutActivity : AppCompatActivity() {
         adapter.stopListening()  // Ferma l'ascolto dei dati
     }
 
-    // Carica gli esercizi selezionati da SharedPreferences
-    public fun loadSelectedWorkouts() {
-        val savedWorkouts = sharedPreferences.getStringSet("selectedWorkouts", mutableSetOf())
-        if (savedWorkouts != null) {
-            selectedWorkouts.addAll(savedWorkouts)
+    // Funzione per aggiornare la lista dei workout
+    private fun updateWorkoutList() {
+        // Parse schedeList from sharedPreferences
+        val gson = Gson()
+        val schedeListJson = sharedPreferences.getString("schedeList", "[]") // Default to empty list
+        val type = object : TypeToken<MutableList<Scheda>>() {}.type
+        val schedeList: MutableList<Scheda> = gson.fromJson(schedeListJson, type)
+
+        // Find the scheda with the matching nome and update its workoutList
+        for (scheda in schedeList) {
+            if (scheda.nome == nomescheda) {
+                scheda.workoutList = workoutList
+                break
+            }
         }
+
+        // Save the updated schedeList back to sharedPreferences
+        val updatedSchedeListJson = gson.toJson(schedeList)
+        sharedPreferences.edit().putString("schedeList", updatedSchedeListJson).apply()
+
+        // Log the updated schedeList for debugging
+        Log.d("DEBUGCACHE", updatedSchedeListJson)
+
+        // Pass the updated workoutList to the result intent
+        val resultIntent = Intent()
+        resultIntent.putExtra("updatedWorkoutList", ArrayList(workoutList)) // Convert to ArrayList for Intent
+        setResult(RESULT_OK, resultIntent)
     }
-
-    // Salva gli esercizi selezionati in SharedPreferences
-    private fun saveSelectedWorkouts() {
-        val editor = sharedPreferences.edit()
-        editor.putStringSet("selectedWorkouts", selectedWorkouts)
-        editor.apply()
-    }
-
-
-        // Other initialization code...
-
-
 
     // ViewHolder per il RecyclerView
     class WorkoutViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -136,7 +150,7 @@ class InsertWorkoutActivity : AppCompatActivity() {
         private val descrizioneTextView: TextView = itemView.findViewById(R.id.descrizioneTextView)
         private val imageView: ImageView = itemView.findViewById(R.id.imageView)
         val cardView: CardView = itemView.findViewById(R.id.cardworkout)
-        val checkBox: CheckBox = itemView.findViewById(R.id.checkBox)  // Aggiungi il CheckBox
+        val checkBox: CheckBox = itemView.findViewById(R.id.checkBox)
 
         fun bind(workout: Workout) {
             titoloTextView.text = workout.titolo
@@ -144,9 +158,15 @@ class InsertWorkoutActivity : AppCompatActivity() {
 
             Picasso.get()
                 .load(workout.url)
-                .placeholder(R.drawable.squatbilanciere) // Placeholder
-                .error(R.drawable.errore_immagine) // Immagine di errore
+                .placeholder(R.drawable.squatbilanciere)
+                .error(R.drawable.errore_immagine)
                 .into(imageView)
         }
     }
 }
+
+
+
+
+
+

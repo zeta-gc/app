@@ -1,6 +1,7 @@
 package com.example.myapplication
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -9,6 +10,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -19,7 +21,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.firebase.ui.database.FirebaseRecyclerAdapter
 import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.common.reflect.TypeToken
 import com.google.firebase.database.FirebaseDatabase
+import com.google.gson.Gson
 import com.squareup.picasso.Picasso
 
 /*class SchedaFragment : Fragment(), MyRecyclerViewAdapter.ItemClickListener {
@@ -83,139 +87,102 @@ import com.squareup.picasso.Picasso
 }*/
 class SchedaFragment : Fragment() {
 
-    private lateinit var adapter: FirebaseRecyclerAdapter<Workout, WorkoutViewHolder>
-    private val workoutList = mutableListOf<Workout>()  // Lista per memorizzare i dati
     private lateinit var sharedPreferences: SharedPreferences
-    private val selectedWorkouts = mutableSetOf<String>()  // Set per memorizzare gli esercizi selezionati
-    private lateinit var noSelectedWorkoutsText: TextView  // Riferimento al TextView
+    private val schedeList = mutableListOf<Scheda>()  // Lista locale delle schede
+    private lateinit var adapter: SchedaAdapter  // Adapter per il RecyclerView
+    private  lateinit var noschedetext : TextView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        sharedPreferences = requireContext().getSharedPreferences("SelectedWorkouts", Context.MODE_PRIVATE)
         val view = inflater.inflate(R.layout.fragment_scheda, container, false)
-        noSelectedWorkoutsText = view.findViewById(R.id.noSelectedWorkoutsText)
+
+        // Inizializza noschedetext prima di usarlo
+        noschedetext = view.findViewById(R.id.noSelectedWorkoutsText)
+
+        // Inizializza SharedPreferences
+        sharedPreferences = requireContext().getSharedPreferences("SchedePrefs", Context.MODE_PRIVATE)
+
+        // Carica le schede salvate
+        loadSchede()
+
+        // Imposta il RecyclerView
         val recyclerView: RecyclerView = view.findViewById(R.id.rvAnimals)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
-
-        val databaseReference = FirebaseDatabase.getInstance("https://gymapp-48c7e-default-rtdb.europe-west1.firebasedatabase.app/").getReference("workouts")
-        val query = databaseReference
-
-        val options = FirebaseRecyclerOptions.Builder<Workout>()
-            .setQuery(query, Workout::class.java)
-            .build()
-
-        adapter = object : FirebaseRecyclerAdapter<Workout, WorkoutViewHolder>(options) {
-            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WorkoutViewHolder {
-                val view = LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_workout, parent, false)
-                return WorkoutViewHolder(view)
-            }
-
-            override fun onBindViewHolder(holder: WorkoutViewHolder, position: Int, model: Workout) {
-                // Mostra solo gli esercizi selezionati
-                if (selectedWorkouts.contains(model.titolo)) {
-                    holder.bind(model)
-                    holder.cardView.visibility = View.VISIBLE  // Mostra la card
-                } else {
-                    holder.cardView.visibility = View.GONE  // Nascondi la card se non è selezionata
-                }
-
-                // Gestione del click sugli elementi
-                holder.cardView.setOnClickListener {
-                    Toast.makeText(requireContext(), "CLICK ${model.titolo}", Toast.LENGTH_SHORT).show()
-                }
-            }
+        adapter = SchedaAdapter(schedeList) { scheda ->
+            // Naviga al SchedaDetailFragment subito dopo aver creato la scheda
+            val detailFragment = SchedaDetailFragment.newInstance(
+                scheda.nome, ArrayList(scheda.workoutList)
+            )
+            requireActivity().supportFragmentManager.beginTransaction()
+                .replace(R.id.frameLayout, detailFragment)
+                .addToBackStack(null)
+                .commit()
         }
-
         recyclerView.adapter = adapter
+
+        // Floating Action Button per aggiungere una nuova scheda
+        val fab: FloatingActionButton = view.findViewById(R.id.floatingActionButton)
+        fab.setOnClickListener {
+            showAddSchedaDialog()
+        }
 
         return view
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        val scanner: FloatingActionButton = view.findViewById(R.id.floatingActionButton)
-        scanner.setOnClickListener {
-            val intent = Intent(requireContext(), InsertWorkoutActivity::class.java)
-            startActivity(intent)
-        }
-    }
-    public fun loadSelectedWorkouts() {
-        val savedWorkouts = sharedPreferences.getStringSet("selectedWorkouts", mutableSetOf())
-        if (savedWorkouts != null) {
-            selectedWorkouts.clear()
-            selectedWorkouts.addAll(savedWorkouts)
-        }
+    // Mostra un dialog per aggiungere una nuova scheda
+    private fun showAddSchedaDialog() {
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setTitle("Nuova Scheda")
 
-        // Verifica se la lista è vuota e mostra il testo appropriato
-        if (selectedWorkouts.isEmpty()) {
-            noSelectedWorkoutsText.visibility = View.VISIBLE  // Mostra il messaggio
-        } else {
-            noSelectedWorkoutsText.visibility = View.GONE  // Nascondi il messaggio
-        }
-    }
-    override fun onStart() {
-        super.onStart()
-        if (adapter != null)
-            adapter.startListening()
-       loadSelectedWorkouts()  // Cari
-        adapter.notifyDataSetChanged()  // Inizia ad ascoltare i dati quando il Fragment è visibile
-    }
+        val input = EditText(requireContext())
+        input.hint = "Nome della scheda"
+        builder.setView(input)
 
-    override fun onResume() {
-        super.onResume()
-        loadSelectedWorkouts()  // Cari
-        adapter.startListening()
-        adapter.notifyDataSetChanged()  // Inizia ad ascoltare i dati quando il Fragment è visibile
-    }
+        builder.setPositiveButton("Aggiungi") { _, _ ->
+            val schedaNome = input.text.toString().trim()
+            if (schedaNome.isNotEmpty()) {
+                val nuovaScheda = Scheda(nome = schedaNome)
+                schedeList.add(nuovaScheda)
+                saveSchede()  // Salva la lista aggiornata
+                adapter.notifyDataSetChanged()
 
-    override fun onPause() {
-        super.onPause()
-        if (adapter != null)
-            adapter.stopListening()  // Ferma l'ascolto quando il Fragment non è visibile
-    }
-
-    // Metodo per caricare i dati da Firebase
-    private fun loadDataFromFirebase() {
-        val databaseReference = FirebaseDatabase.getInstance("https://gymapp-48c7e-default-rtdb.europe-west1.firebasedatabase.app/").getReference("workouts")
-        databaseReference.get().addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val dataSnapshot = task.result
-                if (dataSnapshot != null) {
-                    workoutList.clear()  // Pulisci la lista prima di aggiungere nuovi dati
-                    for (snapshot in dataSnapshot.children) {
-                        val workout = snapshot.getValue(Workout::class.java)
-                        if (workout != null) {
-                            workoutList.add(workout)
-                        }
-                    }
-                    adapter.notifyDataSetChanged()  // Notifica all'adapter che i dati sono cambiati
-                }
+                // Naviga al SchedaDetailFragment subito dopo aver creato la scheda
+                val detailFragment = SchedaDetailFragment.newInstance(
+                    nuovaScheda.nome, ArrayList(nuovaScheda.workoutList)
+                )
+                requireActivity().supportFragmentManager.beginTransaction()
+                    .replace(R.id.frameLayout, detailFragment)
+                    .addToBackStack(null)
+                    .commit()
             } else {
-                Log.e("FirebaseData", "Error fetching data", task.exception)
+                Toast.makeText(requireContext(), "Il nome non può essere vuoto", Toast.LENGTH_SHORT).show()
             }
         }
+        builder.setNegativeButton("Annulla", null)
+        builder.show()
     }
 
-    // ViewHolder per il RecyclerView
-    class WorkoutViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val titoloTextView: TextView = itemView.findViewById(R.id.titoloTextView)
-        private val descrizioneTextView: TextView = itemView.findViewById(R.id.descrizioneTextView)
-        private val imageView: ImageView = itemView.findViewById(R.id.imageView)
-        val cardView: CardView = itemView.findViewById(R.id.cardworkout)
-
-        fun bind(workout: Workout) {
-            titoloTextView.text = workout.titolo
-            descrizioneTextView.text = workout.descrizione
-
-            Picasso.get()
-                .load(workout.url)
-                .placeholder(R.drawable.squatbilanciere) // Placeholder
-                .error(R.drawable.errore_immagine) // Immagine di errore
-                .into(imageView)
+    // Carica la lista delle schede da SharedPreferences
+    private fun loadSchede() {
+        val gson = Gson()
+        val json = sharedPreferences.getString("schedeList", null)
+        val type = object : TypeToken<List<Scheda>>() {}.type
+        val loadedList: List<Scheda> = gson.fromJson(json, type) ?: emptyList()
+        schedeList.clear()
+        schedeList.addAll(loadedList)
+        if (schedeList.isEmpty()) {
+            noschedetext.visibility = View.VISIBLE
+        } else {
+            noschedetext.visibility = View.GONE
         }
     }
-}
 
+    // Salva la lista delle schede in SharedPreferences
+    private fun saveSchede() {
+        val gson = Gson()
+        val json = gson.toJson(schedeList)
+        sharedPreferences.edit().putString("schedeList", json).apply()
+    }
+}
