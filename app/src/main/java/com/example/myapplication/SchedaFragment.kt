@@ -31,11 +31,7 @@ import com.google.firebase.database.ValueEventListener
 import com.google.gson.Gson
 import com.squareup.picasso.Picasso
 
-<<<<<<< Updated upstream
 
-
-=======
->>>>>>> Stashed changes
 class SchedaFragment : Fragment() {
 //
 //    private lateinit var sharedPreferences: SharedPreferences
