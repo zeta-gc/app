@@ -45,7 +45,10 @@ class ProfileFragment : Fragment() {
             val database = FirebaseDatabase.getInstance("https://gymapp-48c7e-default-rtdb.europe-west1.firebasedatabase.app/")
             val nIngressi = database.getReference("users").child(userId ?: "unknown").child("ingressi")
             numeroIngressi = view.findViewById(R.id.numeroIngressi)
-            numeroIngressi.text = "Numero ingressi: ${nIngressi}"
+            nIngressi.get().addOnSuccessListener { snapshot ->
+                val ingressi = snapshot.getValue(Int::class.java) ?: 0 // Default to 0 if not found
+                numeroIngressi.text = "Numero ingressi: $ingressi"
+            }
             benv.text = "Benvenuto, ${auth.currentUser?.email}"
             nIngressi.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {

@@ -39,7 +39,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="208dp"
             android:layout_marginEnd="146dp"
-            android:text="TextView"
+            android:text=""
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
