@@ -32,6 +32,7 @@
         android:layout_height="68dp"
         android:drawableStart="@drawable/lock_svgrepo_com"
         android:hint="Inserisci password"
+        android:inputType="textPassword"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.55"

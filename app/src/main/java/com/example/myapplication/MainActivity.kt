@@ -11,13 +11,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 class MainActivity : AppCompatActivity() {
-
+    private val auth = FirebaseAuth.getInstance()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val auth = FirebaseAuth.getInstance()
+
         setContentView(R.layout.activity_main)
 
         val textUsername : EditText = findViewById(R.id.user)
@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
                                 Log.d("login", "sto passando")
                                 val intentLogin = Intent(this, UserProfileActivity::class.java)
                                 startActivity(intentLogin)
-
+                                finish()
                             } else {
                                 // If sign in fails, display a message to the user.
                                 Log.w("login", "signInWithEmail:failure", task.exception)
@@ -67,5 +67,14 @@ class MainActivity : AppCompatActivity() {
 
 
 
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (auth.currentUser != null){
+            val intentLogin = Intent(this, UserProfileActivity::class.java)
+            startActivity(intentLogin)
+            finish()
+        }
     }
 }

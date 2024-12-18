@@ -8,5 +8,8 @@
     <item android:title="Scheda"
         android:id="@+id/scheda"
         android:icon="@drawable/baseline_checklist_24"/>
+    <item android:title="Profilo"
+        android:id="@+id/profilo"
+        android:icon="@drawable/user_svgrepo_com"/>
 
 </menu>
