@@ -1,9 +1,6 @@
 package com.example.myapplication
-
-import android.app.Activity.RESULT_OK
-import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,82 +9,143 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.firebase.ui.database.FirebaseRecyclerAdapter
+import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.zxing.integration.android.IntentIntegrator.REQUEST_CODE
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.squareup.picasso.Picasso
 
 class SchedaDetailFragment : Fragment() {
 
-    private var nomeScheda: String? = null
-    private lateinit var workoutList: ArrayList<Workout> // Lista di esercizi associati alla scheda
-    private lateinit var sharedPreferences: SharedPreferences
     private  lateinit var nomeShedaView : TextView
-    private lateinit var adapter: WorkoutAdapter
-
+    private lateinit var scheda : Scheda
+    private lateinit var adapter: FirebaseRecyclerAdapter<Workout, WorkoutViewHolder>
+    private lateinit var currentUser : FirebaseUser
+    private lateinit var userID: String
+    private var workoutList = mutableListOf<Workout>()
+    private lateinit var fab: FloatingActionButton
     // Aggiungi il launcher come variabile di classe
     private lateinit var insertWorkoutLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Registrazione dell'attività di risultato
-        insertWorkoutLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                val updatedWorkoutList = result.data?.getSerializableExtra("updatedWorkoutList") as? List<Workout>
 
-                updatedWorkoutList?.let {
-                    workoutList.clear()
-                    workoutList.addAll(it)
-                    adapter.notifyDataSetChanged()
-                }
-            }
-        }
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        sharedPreferences = requireContext().getSharedPreferences("SelectedWorkouts", Context.MODE_PRIVATE)
         val view = inflater.inflate(R.layout.fragment_scheda_detail, container, false)
-
-        // Ottieni la lista degli esercizi passata al fragment
-        workoutList = (arguments?.getSerializable(ARG_WORKOUT_LIST) as? List<Workout> ?: emptyList()) as ArrayList<Workout>
-
-        val recyclerView: RecyclerView = view.findViewById(R.id.rvAnimals)
+        val fab: FloatingActionButton = view.findViewById(R.id.floatingActionButton)
+        fab.setOnClickListener(){
+            val intent = Intent(requireContext(), InsertWorkoutActivity::class.java)
+            intent.putExtra("scheda", scheda)
+            startActivity(intent)
+        }
+        scheda = arguments?.getSerializable("scheda") as Scheda
+        workoutList = scheda.workoutList.toMutableList()
+        val recyclerView: RecyclerView = view.findViewById(R.id.cards)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         nomeShedaView = view.findViewById(R.id.nomeSchedaTextView)
-        nomeScheda = arguments?.getString(ARG_NOME_SCHEDA)
-        nomeShedaView.text = "SCHEDA: $nomeScheda"
-        // Imposta l'adapter per il RecyclerView
-        adapter = WorkoutAdapter(workoutList)
+        nomeShedaView.text = "SCHEDA: ${scheda.nome}"
+
+
+        currentUser = FirebaseAuth.getInstance().currentUser!!
+        userID = currentUser?.uid.toString()
+        val databaseReference = userID?.let {
+            FirebaseDatabase.getInstance("https://gymapp-48c7e-default-rtdb.europe-west1.firebasedatabase.app/")
+                .getReference("users")
+                .child(it)
+                .child("schede")
+                .child(scheda.nome)
+                .child("workoutList")
+        }
+
+        // Ascolta i cambiamenti dei dati
+        if (databaseReference != null) {
+            databaseReference.addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    Log.d("DEBUGDB", "Snapshot: $snapshot")
+                    if (snapshot.exists()) {
+                        workoutList.clear()
+                        // Converte i dati in una lista di oggetti Workout
+                        for (dataSnapshot in snapshot.children) {
+                            val workout = dataSnapshot.getValue(Workout::class.java)
+                            workout?.let {
+                                workoutList.add(it)
+                            }
+                        }
+                        scheda.workoutList = workoutList
+                        // Se la lista è cambiata, aggiorna workoutList
+                        Log.d("DEBUG", "Workout list: $workoutList")
+                    } else {
+                        Log.d("DEBUG", "Nessun workout trovato.")
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e("ERROR", "Errore durante il recupero dei dati: ${error.message}")
+                }
+            })
+        }
+
+        val query = databaseReference
+        if (query == null) {
+            Log.e("ERROR", "Nodo 'schede' non inizializzato correttamente.")
+            return view
+        }
+        val options =
+            FirebaseRecyclerOptions.Builder<Workout>()
+                .setQuery(query, Workout::class.java)
+                .build()
+
+        adapter = object : FirebaseRecyclerAdapter<Workout, WorkoutViewHolder>(options) {
+            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int):WorkoutViewHolder {
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_workout, parent, false)
+                return WorkoutViewHolder(view)
+            }
+
+            override fun onBindViewHolder(holder: WorkoutViewHolder, position: Int, model: Workout) {
+                holder.bind(model)
+                Log.d("DEBUG", model.titolo)
+                // Gestisci la selezione del checkBox
+
+            }
+        }
+
         recyclerView.adapter = adapter
 
-        val scanner: FloatingActionButton = view.findViewById(R.id.floatingActionButton)
-        scanner.setOnClickListener {
-            val intent = Intent(requireContext(), InsertWorkoutActivity::class.java)
-            nomeScheda = arguments?.getString(ARG_NOME_SCHEDA)
-            Log.d("DEBUG", arguments?.getString(ARG_NOME_SCHEDA).toString())
-            intent.putExtra("workoutList", ArrayList(workoutList))  // Passa la lista di workout come serializzabile
-            intent.putExtra("scheda", nomeScheda)  // Passa la lista di workout come serializzabile
-            insertWorkoutLauncher.launch(intent)  // Usa il launcher per avviare l'attività
-        }
 
         return view
     }
 
-    override fun onResume() {
-        super.onResume()
-        Log.d("DEBUG", workoutList.toString())
-        adapter.notifyDataSetChanged() // Inizia ad ascoltare i dati quando il Fragment è visibile
+    override fun onStart() {
+        super.onStart()
+        adapter.startListening()
     }
 
-    // ViewHolder per il RecyclerView
+    override fun onStop() {
+        super.onStop()
+        adapter.stopListening()
+    }
+
+    override fun onResume() {
+        scheda = arguments?.getSerializable("scheda") as Scheda
+        adapter.notifyDataSetChanged()
+        super.onResume()
+    }
     class WorkoutViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val titoloTextView: TextView = itemView.findViewById(R.id.titoloTextView)
         private val descrizioneTextView: TextView = itemView.findViewById(R.id.descrizioneTextView)
@@ -97,7 +155,13 @@ class SchedaDetailFragment : Fragment() {
         fun bind(workout: Workout) {
             titoloTextView.text = workout.titolo
             descrizioneTextView.text = workout.descrizione
-
+            cardView.setOnClickListener(){
+                val videoId = "dQw4w9WgXcQ"  // Replace with your YouTube video ID
+                Log.d("DEBUG", "Video ID: ${workout.video}")
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:${workout.video}"))
+                intent.putExtra(Intent.EXTRA_REFERRER, Uri.parse("android-app://com.google.android.youtube"))
+                itemView.context.startActivity(intent)
+            }
             Picasso.get()
                 .load(workout.url)
                 .placeholder(R.drawable.squatbilanciere) // Placeholder
@@ -106,36 +170,19 @@ class SchedaDetailFragment : Fragment() {
         }
     }
 
-    // Adapter per il RecyclerView
     class WorkoutAdapter(private val workoutList: List<Workout>) :
         RecyclerView.Adapter<WorkoutViewHolder>() {
-
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WorkoutViewHolder {
             val view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.item_workout, parent, false)
             return WorkoutViewHolder(view)
         }
-
         override fun onBindViewHolder(holder: WorkoutViewHolder, position: Int) {
             val workout = workoutList[position]
             holder.bind(workout)
         }
-
         override fun getItemCount(): Int = workoutList.size
     }
 
-    companion object {
-        private const val ARG_NOME_SCHEDA = "nomeScheda"
-        private const val ARG_WORKOUT_LIST = "workoutList"
 
-        fun newInstance(nomeScheda: String, workoutList: List<Workout>) =
-            SchedaDetailFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_NOME_SCHEDA, nomeScheda)
-                    putSerializable(ARG_WORKOUT_LIST, ArrayList(workoutList)) // Passa la lista degli esercizi
-                    Log.d("DEBUG", nomeScheda)
-                }
-            }
-    }
 }
-

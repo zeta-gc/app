@@ -12,7 +12,7 @@
 
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvAnimals"
+            android:id="@+id/cards"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             tools:layout_editor_absoluteX="0dp"
@@ -42,7 +42,7 @@
             android:text="Nessuna scheda disponibile, creane una"
             android:textSize="16sp"
             android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="@+id/rvAnimals"
+            app:layout_constraintBottom_toBottomOf="@+id/cards"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"

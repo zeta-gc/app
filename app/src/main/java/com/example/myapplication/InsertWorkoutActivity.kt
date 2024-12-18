@@ -11,46 +11,62 @@ import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.firebase.ui.database.FirebaseRecyclerAdapter
 import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.common.reflect.TypeToken
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.gson.Gson
 import com.squareup.picasso.Picasso
 
 class InsertWorkoutActivity : AppCompatActivity() {
     private lateinit var adapter: FirebaseRecyclerAdapter<Workout, WorkoutViewHolder>
-    private var workoutList: MutableList<Workout> = mutableListOf()  // Lista dei workout associata alla scheda
-    private lateinit var sharedPreferences: SharedPreferences
     private var oldWorkoutList = mutableListOf<Workout>()
+    private lateinit var scheda: Scheda
+    private lateinit var workoutList: MutableList<Workout>
+    private lateinit var currentUser : FirebaseUser
+    private lateinit var userID: String
     lateinit var nomescheda: String
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_insert_workout)
-        sharedPreferences = getSharedPreferences("SchedePrefs", Context.MODE_PRIVATE)
-        Log.d("DEBUG", sharedPreferences.all.toString())
-        nomescheda = intent.getStringExtra("scheda") as String
-        Log.d("DEBUGSCHEDA", nomescheda)
-        // Ricevi la lista di workout passata dall'intent
-        workoutList = intent.getSerializableExtra("workoutList") as? MutableList<Workout> ?: mutableListOf()
-        oldWorkoutList = workoutList.toMutableList()
-        Log.d("DEBUGWORKOUT", workoutList.toString())
+
+        currentUser = FirebaseAuth.getInstance().currentUser!!
+        userID = currentUser?.uid.toString()
+
+        // Recupera la scheda passata come extra
+        scheda = intent.getSerializableExtra("scheda") as Scheda
+        workoutList = scheda.workoutList.toMutableList()
+
+        // Inizializza workoutList con la lista esistente di workout
+
+        val databaseReference = FirebaseDatabase.getInstance()
+            .getReference("users")
+            .child(userID)
+            .child("schede")
+            .child(scheda.nome)
+            .child("workoutList")
 
 
-
-        val recyclerView: RecyclerView = findViewById(R.id.rvAnimals)
+        val recyclerView: RecyclerView = findViewById(R.id.cards)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        val databaseReference = FirebaseDatabase.getInstance("https://gymapp-48c7e-default-rtdb.europe-west1.firebasedatabase.app/").getReference("workouts")
-        val query = databaseReference
+        // Ottieni i workout disponibili da un altro nodo
+        val workoutDatabaseReference = FirebaseDatabase.getInstance("https://gymapp-48c7e-default-rtdb.europe-west1.firebasedatabase.app/")
+            .getReference("workouts")
+
+        val query = workoutDatabaseReference
 
         val options = FirebaseRecyclerOptions.Builder<Workout>()
             .setQuery(query, Workout::class.java)
@@ -65,9 +81,10 @@ class InsertWorkoutActivity : AppCompatActivity() {
 
             override fun onBindViewHolder(holder: WorkoutViewHolder, position: Int, model: Workout) {
                 holder.bind(model)
-                Log.d("DEBUG", model.titolo)
-                // Gestisci la selezione del checkBox
-                holder.checkBox.isChecked = workoutList.contains(model)  // Imposta il checkBox in base alla selezione
+                Log.d("DEBUGDBB", model.toString())
+
+                // Imposta il checkBox in base alla selezione
+                holder.checkBox.isChecked = workoutList.contains(model)
 
                 holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
                     if (isChecked) {
@@ -84,14 +101,29 @@ class InsertWorkoutActivity : AppCompatActivity() {
         // Gestione del tasto "Indietro" (back)
         val callback: OnBackPressedCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                Log.d("DEBUG", workoutList.toString())
-                if (oldWorkoutList != workoutList) {
+                if (scheda.workoutList != workoutList) {
                     val builder = AlertDialog.Builder(this@InsertWorkoutActivity)
                     builder.setTitle("Attenzione")
                     builder.setMessage("Vuoi salvare le modifiche?")
                     builder.setPositiveButton("Si") { _, _ ->
-                        updateWorkoutList()  // Aggiorna la lista dei workout selezionati
-                        finish()  // Chiudi l'attività
+                        scheda.workoutList = workoutList
+
+                        // Aggiorna la lista nel database
+                        val databaseReference = FirebaseDatabase.getInstance("https://gymapp-48c7e-default-rtdb.europe-west1.firebasedatabase.app/")
+                            .getReference("users")
+                            .child(userID)
+                            .child("schede")
+                            .child(scheda.nome)
+                            .child("workoutList")
+
+                        databaseReference.setValue(workoutList)
+                            .addOnSuccessListener {
+                                Log.d("DEBUG", "Lista workout aggiornata correttamente.")
+                                finish()  // Chiudi l'attività
+                            }
+                            .addOnFailureListener { e ->
+                                Log.e("ERROR", "Errore durante l'aggiornamento della lista: ${e.message}")
+                            }
                     }
                     builder.setNegativeButton("No") { dialog, _ ->
                         dialog.dismiss()  // Chiudi il dialogo senza fare nulla
@@ -116,35 +148,6 @@ class InsertWorkoutActivity : AppCompatActivity() {
         adapter.stopListening()  // Ferma l'ascolto dei dati
     }
 
-    // Funzione per aggiornare la lista dei workout
-    private fun updateWorkoutList() {
-        // Parse schedeList from sharedPreferences
-        val gson = Gson()
-        val schedeListJson = sharedPreferences.getString("schedeList", "[]") // Default to empty list
-        val type = object : TypeToken<MutableList<Scheda>>() {}.type
-        val schedeList: MutableList<Scheda> = gson.fromJson(schedeListJson, type)
-
-        // Find the scheda with the matching nome and update its workoutList
-        for (scheda in schedeList) {
-            if (scheda.nome == nomescheda) {
-                scheda.workoutList = workoutList
-                break
-            }
-        }
-
-        // Save the updated schedeList back to sharedPreferences
-        val updatedSchedeListJson = gson.toJson(schedeList)
-        sharedPreferences.edit().putString("schedeList", updatedSchedeListJson).apply()
-
-        // Log the updated schedeList for debugging
-        Log.d("DEBUGCACHE", updatedSchedeListJson)
-
-        // Pass the updated workoutList to the result intent
-        val resultIntent = Intent()
-        resultIntent.putExtra("updatedWorkoutList", ArrayList(workoutList)) // Convert to ArrayList for Intent
-        setResult(RESULT_OK, resultIntent)
-    }
-
     // ViewHolder per il RecyclerView
     class WorkoutViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val titoloTextView: TextView = itemView.findViewById(R.id.titoloTextView)
@@ -165,6 +168,7 @@ class InsertWorkoutActivity : AppCompatActivity() {
         }
     }
 }
+
 
 
 
