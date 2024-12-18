@@ -88,7 +88,7 @@ class InsertWorkoutActivity : AppCompatActivity() {
                 if (oldWorkoutList != workoutList) {
                     val builder = AlertDialog.Builder(this@InsertWorkoutActivity)
                     builder.setTitle("Attenzione")
-                    builder.setMessage("Sei sicuro di voler uscire senza salvare i workout selezionati?")
+                    builder.setMessage("Vuoi salvare le modifiche?")
                     builder.setPositiveButton("Si") { _, _ ->
                         updateWorkoutList()  // Aggiorna la lista dei workout selezionati
                         finish()  // Chiudi l'attività
