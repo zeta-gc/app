@@ -78,7 +78,8 @@ class RegisterActivity: AppCompatActivity() {
                     auth.currentUser?.sendEmailVerification()
                     val userData = mapOf(
                         "email" to email,
-                        "gender" to gender// Replace with actual gender
+                        "gender" to gender,// Replace with actual gender
+                        "ingressi" to 0
                     )
 
                     userRef.setValue(userData)

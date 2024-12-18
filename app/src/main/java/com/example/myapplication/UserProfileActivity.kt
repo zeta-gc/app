@@ -13,6 +13,10 @@ import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.gson.Gson
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanIntentResult
@@ -35,7 +39,7 @@ class UserProfileActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val auth = FirebaseAuth.getInstance()
+
         setContentView(R.layout.activity_user_profile)
         val bottomView : BottomNavigationView = findViewById(R.id.bottomNavigationView)
         cambiaSchermata(HomeFragment())
@@ -47,10 +51,12 @@ class UserProfileActivity : AppCompatActivity() {
                 R.id.scheda ->{
                     cambiaSchermata(SchedaFragment())
                 }
+                R.id.profilo ->{
+                    cambiaSchermata(ProfileFragment())
+                }
             }
             true
         }
-
 
 
     }

@@ -26,65 +26,8 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.gson.Gson
 import com.squareup.picasso.Picasso
 
-/*class SchedaFragment : Fragment(), MyRecyclerViewAdapter.ItemClickListener {
 
-    private var param1: String? = null
-    private var param2: String? = null
-    private lateinit var adapter: MyRecyclerViewAdapter
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        // Sample data to populate the RecyclerView
-        val lista: Array<Workout> = arrayOf(
-            Workout("Allenamento Cardio", "ziatta", "https://media.licdn.com/dms/image/v2/C5603AQG8UdMc2Fli_w/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1516307193470?e=2147483647&v=beta&t=sbJ-41oYO3RTB3HREZ86DyRs4vMGiMcC5_57Oy2pQHY"),
-            Workout("Forza Muscolare", "ziatttta", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYl0Ef_noaQm7mhcVROMZaIRbnznkJloEcoA&s"),
-
-        )
-
-        // Set up the RecyclerView
-        val recyclerView: RecyclerView = view.findViewById(R.id.rvAnimals)
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        adapter = MyRecyclerViewAdapter(requireContext(), lista)
-        adapter.setClickListener(this)
-        recyclerView.adapter = adapter
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_scheda, container, false)
-    }
-
-    override fun onItemClick(view: View, position: Int) {
-        val item = adapter.getItem(position)
-        Toast.makeText(requireContext(), "CLICCATO $item", Toast.LENGTH_LONG).show()
-    }
-
-    companion object {
-        private const val ARG_PARAM1 = "param1"
-        private const val ARG_PARAM2 = "param2"
-
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            SchedaFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
-    }
-}*/
 class SchedaFragment : Fragment() {
 
     private lateinit var sharedPreferences: SharedPreferences

@@ -11,10 +11,9 @@
         android:layout_height="match_parent">
 
         <TextView
-            android:id="@+id/textView2"
+            android:id="@+id/benvenuto"
             android:layout_width="148dp"
             android:layout_height="104dp"
-            android:text="Suca"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
