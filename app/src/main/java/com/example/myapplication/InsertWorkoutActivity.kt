@@ -28,9 +28,9 @@ import com.squareup.picasso.Picasso
 
 class InsertWorkoutActivity : AppCompatActivity() {
     private lateinit var adapter: FirebaseRecyclerAdapter<Workout, WorkoutViewHolder>
-    private val selectedWorkouts = mutableSetOf<String>()
     private var workoutList: MutableList<Workout> = mutableListOf()  // Lista dei workout associata alla scheda
     private lateinit var sharedPreferences: SharedPreferences
+    private var oldWorkoutList = mutableListOf<Workout>()
     lateinit var nomescheda: String
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,6 +41,8 @@ class InsertWorkoutActivity : AppCompatActivity() {
         Log.d("DEBUGSCHEDA", nomescheda)
         // Ricevi la lista di workout passata dall'intent
         workoutList = intent.getSerializableExtra("workoutList") as? MutableList<Workout> ?: mutableListOf()
+        oldWorkoutList = workoutList.toMutableList()
+        Log.d("DEBUGWORKOUT", workoutList.toString())
 
 
 
@@ -63,16 +65,14 @@ class InsertWorkoutActivity : AppCompatActivity() {
 
             override fun onBindViewHolder(holder: WorkoutViewHolder, position: Int, model: Workout) {
                 holder.bind(model)
-
+                Log.d("DEBUG", model.titolo)
                 // Gestisci la selezione del checkBox
-                holder.checkBox.isChecked = selectedWorkouts.contains(model.titolo)
+                holder.checkBox.isChecked = workoutList.contains(model)  // Imposta il checkBox in base alla selezione
 
                 holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
                     if (isChecked) {
-                        selectedWorkouts.add(model.titolo)  // Aggiungi all'elenco degli esercizi selezionati
                         workoutList.add(model)  // Aggiungi l'esercizio alla lista dei workout
                     } else {
-                        selectedWorkouts.remove(model.titolo)  // Rimuovi dall'elenco degli esercizi selezionati
                         workoutList.remove(model)  // Rimuovi l'esercizio dalla lista dei workout
                     }
                 }
@@ -84,7 +84,8 @@ class InsertWorkoutActivity : AppCompatActivity() {
         // Gestione del tasto "Indietro" (back)
         val callback: OnBackPressedCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (selectedWorkouts.isNotEmpty()) {
+                Log.d("DEBUG", workoutList.toString())
+                if (oldWorkoutList != workoutList) {
                     val builder = AlertDialog.Builder(this@InsertWorkoutActivity)
                     builder.setTitle("Attenzione")
                     builder.setMessage("Sei sicuro di voler uscire senza salvare i workout selezionati?")

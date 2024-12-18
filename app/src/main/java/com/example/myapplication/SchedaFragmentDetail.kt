@@ -26,8 +26,7 @@ class SchedaDetailFragment : Fragment() {
     private var nomeScheda: String? = null
     private lateinit var workoutList: ArrayList<Workout> // Lista di esercizi associati alla scheda
     private lateinit var sharedPreferences: SharedPreferences
-    private val selectedWorkouts = mutableSetOf<String>() // Set per memorizzare gli esercizi selezionati
-
+    private  lateinit var nomeShedaView : TextView
     private lateinit var adapter: WorkoutAdapter
 
     // Aggiungi il launcher come variabile di classe
@@ -62,7 +61,9 @@ class SchedaDetailFragment : Fragment() {
 
         val recyclerView: RecyclerView = view.findViewById(R.id.rvAnimals)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
-
+        nomeShedaView = view.findViewById(R.id.nomeSchedaTextView)
+        nomeScheda = arguments?.getString(ARG_NOME_SCHEDA)
+        nomeShedaView.text = "SCHEDA: $nomeScheda"
         // Imposta l'adapter per il RecyclerView
         adapter = WorkoutAdapter(workoutList)
         recyclerView.adapter = adapter
