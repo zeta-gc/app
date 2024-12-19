@@ -31,7 +31,7 @@
 
 
             <LinearLayout
-                android:layout_width="271dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="2"
                 android:orientation="vertical"
@@ -60,10 +60,13 @@
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/deleteSchedaButton"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
                 android:clickable="true"
+                app:fabCustomSize="42dp"
+                app:fabSize="mini"
                 app:srcCompat="@drawable/baseline_delete_24" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>

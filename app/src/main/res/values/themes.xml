@@ -5,7 +5,13 @@
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
         <item name="strokeColor" >@color/strokeColor</item>
         <item name="colorPrimary" >@color/orangeMain</item>
+        <item name="colorSecondaryContainer">@color/orangeMain</item>
+        <item name="colorPrimaryContainer">@color/orangeMain</item>
     </style>
 
     <style name="Theme.MyApplication" parent="Base.Theme.MyApplication" />
+    <style name="BottomNavigationTheme" parent="Theme.AppCompat.Light">
+        <item name="colorPrimary">@color/orangeMain</item>
+        <item name="android:textColorSecondary">@color/white</item>
+    </style>
 </resources>
