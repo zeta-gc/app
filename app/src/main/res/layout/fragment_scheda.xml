@@ -11,6 +11,16 @@
         android:layout_height="match_parent">
 
 
+        <ProgressBar
+            android:id="@+id/loading"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="@+id/cards"
+            app:layout_constraintEnd_toEndOf="@+id/cards"
+            app:layout_constraintStart_toStartOf="@+id/cards"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/cards"
             android:layout_width="match_parent"

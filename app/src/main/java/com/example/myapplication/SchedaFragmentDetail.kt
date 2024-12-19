@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.cardview.widget.CardView
@@ -27,6 +28,7 @@ import com.squareup.picasso.Picasso
 class SchedaDetailFragment : Fragment() {
 
     private  lateinit var nomeShedaView : TextView
+    private  lateinit var loading : ProgressBar
     private lateinit var scheda : Scheda
     private lateinit var adapter: FirebaseRecyclerAdapter<Workout, WorkoutViewHolder>
     private lateinit var currentUser : FirebaseUser
@@ -47,6 +49,8 @@ class SchedaDetailFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_scheda_detail, container, false)
+        loading = view.findViewById(R.id.loading)
+        loading.visibility = View.VISIBLE
         val fab: FloatingActionButton = view.findViewById(R.id.floatingActionButton)
         fab.setOnClickListener(){
             val intent = Intent(requireContext(), InsertWorkoutActivity::class.java)
@@ -77,6 +81,7 @@ class SchedaDetailFragment : Fragment() {
             databaseReference.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     Log.d("DEBUGDB", "Snapshot: $snapshot")
+                    loading.visibility = View.GONE
                     if (snapshot.exists()) {
                         workoutList.clear()
                         // Converte i dati in una lista di oggetti Workout
@@ -86,6 +91,7 @@ class SchedaDetailFragment : Fragment() {
                                 workoutList.add(it)
                             }
                         }
+                        loading.visibility = View.GONE
                         scheda.workoutList = workoutList
                         // Se la lista è cambiata, aggiorna workoutList
                         Log.d("DEBUG", "Workout list: $workoutList")

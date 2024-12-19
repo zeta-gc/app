@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
@@ -31,17 +32,16 @@ import com.squareup.picasso.Picasso
 
 class InsertWorkoutActivity : AppCompatActivity() {
     private lateinit var adapter: FirebaseRecyclerAdapter<Workout, WorkoutViewHolder>
-    private var oldWorkoutList = mutableListOf<Workout>()
+    private lateinit var loading :ProgressBar
     private lateinit var scheda: Scheda
     private lateinit var workoutList: MutableList<Workout>
     private lateinit var currentUser : FirebaseUser
     private lateinit var userID: String
-    lateinit var nomescheda: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_insert_workout)
-
+        loading = findViewById(R.id.loading)
         currentUser = FirebaseAuth.getInstance().currentUser!!
         userID = currentUser?.uid.toString()
 
@@ -49,20 +49,12 @@ class InsertWorkoutActivity : AppCompatActivity() {
         scheda = intent.getSerializableExtra("scheda") as Scheda
         workoutList = scheda.workoutList.toMutableList()
 
-        // Inizializza workoutList con la lista esistente di workout
-
-        val databaseReference = FirebaseDatabase.getInstance()
-            .getReference("users")
-            .child(userID)
-            .child("schede")
-            .child(scheda.nome)
-            .child("workoutList")
+        loading.visibility = View.VISIBLE
 
 
         val recyclerView: RecyclerView = findViewById(R.id.cards)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        // Ottieni i workout disponibili da un altro nodo
         val workoutDatabaseReference = FirebaseDatabase.getInstance("https://gymapp-48c7e-default-rtdb.europe-west1.firebasedatabase.app/")
             .getReference("workouts")
 
@@ -76,24 +68,32 @@ class InsertWorkoutActivity : AppCompatActivity() {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WorkoutViewHolder {
                 val view = LayoutInflater.from(parent.context)
                     .inflate(R.layout.item_workout_all, parent, false)
+                Log.d("DEBUGDBB", parent.context.toString())
                 return WorkoutViewHolder(view)
             }
 
             override fun onBindViewHolder(holder: WorkoutViewHolder, position: Int, model: Workout) {
                 holder.bind(model)
                 Log.d("DEBUGDBB", model.toString())
+                val isSelected = workoutList.contains(model) ?: false
+                    holder.checkBox.isChecked = isSelected
 
-                // Imposta il checkBox in base alla selezione
-                holder.checkBox.isChecked = workoutList.contains(model)
+                holder.checkBox.setOnClickListener {
+                    val isChecked = holder.checkBox.isChecked
 
-                holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
                     if (isChecked) {
-                        workoutList.add(model)  // Aggiungi l'esercizio alla lista dei workout
+                        workoutList.add(model)
                     } else {
-                        workoutList.remove(model)  // Rimuovi l'esercizio dalla lista dei workout
+                        Log.d("DEBUG", "Rimuovo l'elemento")
+                        workoutList.remove(model)
                     }
                 }
             }
+            override fun onDataChanged() {
+                super.onDataChanged()
+                loading.visibility = View.GONE // Nascondi il loader quando i dati sono caricati
+            }
+
         }
 
         recyclerView.adapter = adapter
@@ -159,7 +159,6 @@ class InsertWorkoutActivity : AppCompatActivity() {
         fun bind(workout: Workout) {
             titoloTextView.text = workout.titolo
             descrizioneTextView.text = workout.descrizione
-
             Picasso.get()
                 .load(workout.url)
                 .placeholder(R.drawable.squatbilanciere)

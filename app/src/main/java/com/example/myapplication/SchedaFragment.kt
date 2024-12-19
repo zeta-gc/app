@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.cardview.widget.CardView
@@ -23,6 +24,7 @@ import com.google.firebase.database.FirebaseDatabase
 
 class SchedaFragment : Fragment() {
     private  lateinit var noschedetext : TextView
+    private lateinit var loading: ProgressBar
     private lateinit var adapter: FirebaseRecyclerAdapter<Scheda, SchedaViewHolder>
     private lateinit var currentUser : FirebaseUser
     private lateinit var userID: String
@@ -32,6 +34,8 @@ class SchedaFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_scheda, container, false)
         noschedetext = view.findViewById(R.id.noSelectedWorkoutsText)
+        noschedetext.visibility = View.GONE
+        loading = view.findViewById(R.id.loading)
         val fab: FloatingActionButton = view.findViewById(R.id.floatingActionButton)
         fab.setOnClickListener {
             showAddSchedaDialog()
@@ -85,6 +89,7 @@ class SchedaFragment : Fragment() {
 
             override fun onDataChanged() {
                 super.onDataChanged()
+                loading.visibility = View.GONE
                 if (itemCount == 0) {
                     noschedetext.visibility = View.VISIBLE
                 } else {
@@ -94,7 +99,7 @@ class SchedaFragment : Fragment() {
 
         }
         recyclerView.adapter = adapter
-
+        loading.visibility = View.VISIBLE
         return view
     }
 
