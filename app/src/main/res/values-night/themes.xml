@@ -3,5 +3,7 @@
     <style name="Base.Theme.MyApplication" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your dark theme here. -->
         <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        <item name="strokeColor" >@color/strokeColor</item>
+        <item name="colorPrimary" >@color/orangeMain</item>
     </style>
 </resources>
