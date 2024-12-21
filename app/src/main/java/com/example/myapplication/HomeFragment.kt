@@ -45,6 +45,8 @@ class HomeFragment : Fragment() {
         private lateinit var sessionManager: SessionManager
         private lateinit var menuButton: Button
         private lateinit var cardView: CardView
+        private lateinit var skipButton: Button
+        private  lateinit var schedaLabel :TextView
         override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
             savedInstanceState: Bundle?
@@ -59,6 +61,11 @@ class HomeFragment : Fragment() {
             scanner = binding.findViewById(R.id.floatingActionButton2)
             terminaButton = binding.findViewById(R.id.terminaButton)
             cardView = binding.findViewById(R.id.cardworkout)
+            skipButton = binding.findViewById(R.id.skipButton)
+            schedaLabel = binding.findViewById(R.id.schedaLabel)
+            skipButton.setOnClickListener {
+                sessionManager.skipWorkout()
+            }
 
             val user = FirebaseAuth.getInstance().currentUser
             sessionManager = SessionManager(user?.uid ?: "")
@@ -140,6 +147,7 @@ class HomeFragment : Fragment() {
                             val currentWorkout = sessionManager.getCurrentWorkout()
                             cardView.findViewById<TextView>(R.id.titoloTextView).text = currentWorkout?.titolo
                             cardView.findViewById<TextView>(R.id.descrizioneTextView).text = currentWorkout?.descrizione
+                            schedaLabel.text = "SCHEDA: ${sessionManager.currentScheda?.nome}"
                             val imageUrl = currentWorkout?.url
                             if (!imageUrl.isNullOrEmpty()) {
                                 val imageView = cardView.findViewById<ImageView>(R.id.imageView)
@@ -174,6 +182,7 @@ class HomeFragment : Fragment() {
             sessionManager.terminateSession()
             allenametoLayout.visibility = View.GONE
             scanner.visibility = View.VISIBLE
+            sessionManager.terminateSession()
         }
 
         val timerDuration = 60000L // 1 minute in milliseconds

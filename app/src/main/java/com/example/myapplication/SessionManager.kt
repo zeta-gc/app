@@ -11,7 +11,8 @@ import kotlinx.coroutines.tasks.await
 class SessionManager(private val userId: String) {
     private val workoutDatabaseReference = FirebaseDatabase.getInstance("https://gymapp-48c7e-default-rtdb.europe-west1.firebasedatabase.app/").getReference("users").child(userId).child("session")
     private var currentWorkout: Workout? = null
-    private lateinit var currentScheda: Scheda
+    public var currentScheda: Scheda? = null
+    private var currentWorkoutIndex: Int = 0
     // This function listens for changes in the session and notifies the callback
     fun listenForSessionChanges(callback: (Boolean, DataSnapshot?) -> Unit) {
         workoutDatabaseReference.addValueEventListener(object : ValueEventListener {
@@ -19,7 +20,12 @@ class SessionManager(private val userId: String) {
                 try {
                     // Trigger the callback with the snapshot if data is successfully retrieved
                     Log.d("SessionManager", "Data retrieved: ${snapshot.value}")
-                    if (snapshot.child("scheda").exists()) {
+                    if (!snapshot.exists()) {
+                        callback(false, null)
+                        return
+                    }
+                    currentWorkoutIndex = snapshot.child("currentWorkoutIndex").getValue(Int::class.java) ?: 0
+                    if (snapshot.child("scheda").exists() && currentScheda != snapshot.child("scheda").getValue(Scheda::class.java)) {
                         setSessionScheda(snapshot.child("scheda").getValue(Scheda::class.java)!!)
                     }
 
@@ -51,8 +57,7 @@ class SessionManager(private val userId: String) {
     fun setSessionScheda(scheda: Scheda) {
         workoutDatabaseReference.child("scheda").setValue(scheda)
         if(scheda.workoutList.isNotEmpty()) {
-            workoutDatabaseReference.child("currentWorkoutIndex").setValue(0)
-            currentWorkout = scheda.workoutList[0]
+            currentWorkout = scheda.workoutList[currentWorkoutIndex?:0]
             currentScheda = scheda
         }else{
         }
@@ -65,5 +70,19 @@ class SessionManager(private val userId: String) {
     fun getCurrentWorkout(): Workout? {
 
         return currentWorkout?:null
+    }
+
+    fun skipWorkout() {
+        if (currentScheda == null || currentWorkout == null) {
+            Log.e("SessionManager", "Current scheda or workout is null")
+            return
+        }
+        val currentWorkoutIndex = currentScheda!!.workoutList.indexOf(currentWorkout)
+        if (currentWorkoutIndex < currentScheda!!.workoutList.size - 1) {
+            Log.d("SessionManager", "Skipping workout")
+            currentWorkout = currentScheda!!.workoutList[currentWorkoutIndex + 1]
+            workoutDatabaseReference.child("currentWorkoutIndex").setValue(currentWorkoutIndex + 1)
+            Log.d("SessionManager", "Current workout index: ${currentWorkoutIndex + 1}")
+        }
     }
 }
