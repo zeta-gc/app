@@ -4,90 +4,174 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.ImageView
+import android.widget.PopupMenu
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.cardview.widget.CardView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import com.google.gson.Gson
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanIntentResult
 import com.journeyapps.barcodescanner.ScanOptions
+import com.squareup.picasso.Picasso
 import kotlinx.coroutines.launch
-import org.w3c.dom.Text
 import java.io.IOException
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+
 
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
 class HomeFragment : Fragment() {
-    private var param1: String? = null
-    private var param2: String? = null
-    private lateinit var scanner: FloatingActionButton
-    private lateinit var allenametoLayout: ConstraintLayout
-    private lateinit var terminaButton : Button
-    private lateinit var session : SessionManager
+        private lateinit var allenametoLayout: ConstraintLayout
+        private lateinit var scanner: FloatingActionButton
+        private lateinit var terminaButton: Button
+        private lateinit var sessionManager: SessionManager
+        private lateinit var menuButton: Button
+        private lateinit var cardView: CardView
+        override fun onCreateView(
+            inflater: LayoutInflater, container: ViewGroup?,
+            savedInstanceState: Bundle?
+        ): View? {
+            val binding = inflater.inflate(R.layout.fragment_home, container, false)
+            menuButton = binding.findViewById(R.id.menuButton)
+            menuButton.setOnClickListener { v ->
+                showPopupMenu(v)
+            }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+            allenametoLayout = binding.findViewById(R.id.allenametoLayout)
+            scanner = binding.findViewById(R.id.floatingActionButton2)
+            terminaButton = binding.findViewById(R.id.terminaButton)
+            cardView = binding.findViewById(R.id.cardworkout)
+
+            val user = FirebaseAuth.getInstance().currentUser
+            sessionManager = SessionManager(user?.uid ?: "")
+
+            // Listen for session changes in real-time
+            listenForSessionChanges()
+
+            // Start QR scan when the scanner button is clicked
+            scanner.setOnClickListener {
+                verificaPermessi(requireContext())
+            }
+
+            // End session when the termina button is clicked
+            terminaButton.setOnClickListener {
+                sessionManager.terminateSession()
+                allenametoLayout.visibility = View.GONE
+                scanner.visibility = View.VISIBLE
+            }
+
+            return binding
         }
 
 
-    }
+    private fun showPopupMenu(view: View) {
+        val popupMenu = PopupMenu(requireContext(), view)
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+        // Get reference to Firebase "schede" node for the current user
+        val databaseReference = FirebaseAuth.getInstance().currentUser?.let {
+            FirebaseDatabase.getInstance("https://gymapp-48c7e-default-rtdb.europe-west1.firebasedatabase.app/")
+                .getReference("users")
+                .child(it.uid) // Use UID instead of `toString()`
+                .child("schede")
+        }
 
-        val user = FirebaseAuth.getInstance().currentUser
-        session = user?.uid?.let { SessionManager(it) }!!
-        if (session != null) {
+        // Fetch data from Firebase
+        databaseReference?.get()?.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val snapshot = task.result
+                val menu = popupMenu.menu
+                val schede = mutableListOf<Scheda>()
+                snapshot?.children?.forEachIndexed { index, dataSnapshot ->
+                    val menuItemTitle = dataSnapshot.child("nome").getValue(String::class.java)
+                    schede.add(dataSnapshot.getValue(Scheda::class.java)!!)
+                    menu.add(0, index, 0, menuItemTitle)
+                }
 
-            lifecycleScope.launch {
-                Log.d("DEBUGSESSION", session.isUserInSession().toString())
-
-                if (session.isUserInSession()){
+                popupMenu.setOnMenuItemClickListener { item: MenuItem ->
+                    val item = schede[item.itemId]
+                    Log.d("DEBUG", "Scheda selezionata: ${item}")
+                    sessionManager.setSessionScheda(item)
                     allenametoLayout.visibility = View.VISIBLE
+                    menuButton.visibility = View.GONE
+                    Toast.makeText(requireContext(), "${item.nome} clicked", Toast.LENGTH_SHORT).show()
+                    true
+
+
+                }
+
+                // Show the PopupMenu after adding items
+                popupMenu.show()
+            } else {
+                // Handle error if Firebase fetch fails
+                Toast.makeText(requireContext(), "Failed to load data from Firebase", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+        private fun listenForSessionChanges() {
+            sessionManager.listenForSessionChanges {isInSession, snapshot ->
+                Log.d("DEBUG", "Session status: $isInSession - Snapshot: $snapshot")
+                if (isInSession) {
                     scanner.visibility = View.GONE
-                }else {
+                    if (snapshot != null) {
+                        if (!snapshot.child("scheda").exists()) {
+                            menuButton.visibility = View.VISIBLE
+                        }else{
+                            menuButton.visibility = View.GONE
+                            allenametoLayout.visibility = View.VISIBLE
+
+                            val currentWorkout = sessionManager.getCurrentWorkout()
+                            cardView.findViewById<TextView>(R.id.titoloTextView).text = currentWorkout?.titolo
+                            cardView.findViewById<TextView>(R.id.descrizioneTextView).text = currentWorkout?.descrizione
+                            val imageUrl = currentWorkout?.url
+                            if (!imageUrl.isNullOrEmpty()) {
+                                val imageView = cardView.findViewById<ImageView>(R.id.imageView)
+                                Picasso.get()
+                                    .load(imageUrl)
+                                    .placeholder(R.drawable.squatbilanciere)
+                                    .error(R.drawable.errore_immagine)
+                                    .into(imageView)
+                            }
+                        }
+                    }
+                } else {
                     allenametoLayout.visibility = View.GONE
                     scanner.visibility = View.VISIBLE
+                    menuButton.visibility = View.GONE
                 }
             }
         }
 
-        return inflater.inflate(R.layout.fragment_home, container, false)
-
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         allenametoLayout = view.findViewById(R.id.allenametoLayout)
         scanner = view.findViewById(R.id.floatingActionButton2)
         terminaButton = view.findViewById(R.id.terminaButton)
+
+
         scanner.setOnClickListener {
             verificaPermessi(requireContext())
         }
         terminaButton.setOnClickListener {
-            session.terminateSession()
+            sessionManager.terminateSession()
             allenametoLayout.visibility = View.GONE
             scanner.visibility = View.VISIBLE
         }
@@ -109,6 +193,7 @@ class HomeFragment : Fragment() {
                 timer?.cancel() // Stop the current timer but keep the remaining time
             } else {
                 // Start or Resume the timer
+
                 isTimerRunning = true
                 timerButton.text = "Pause"
 
@@ -128,11 +213,6 @@ class HomeFragment : Fragment() {
                 }.start()
             }
         }
-
-
-
-
-
     }
 
     private suspend fun ottieniToken(): String? = suspendCoroutine { continuation ->
@@ -195,8 +275,7 @@ class HomeFragment : Fragment() {
                             requireActivity().runOnUiThread {
                                 Toast.makeText(requireContext(), "Risposta API: ${apiResponse.message}", Toast.LENGTH_LONG).show()
                                 Log.d("qrscanner", "$responseData")
-                                scanner.visibility = View.GONE
-                                allenametoLayout.visibility = View.VISIBLE
+
                             }
                         }
                     }
