@@ -49,6 +49,11 @@ class HomeFragment : Fragment() {
         private lateinit var cardView: CardView
         private lateinit var skipButton: Button
         private  lateinit var schedaLabel :TextView
+        lateinit var timerTextView: TextView
+        var isTimerRunning = false
+        val timerDuration = 60000L // 1 minute in milliseconds
+        var timeRemaining = timerDuration // Tracks the remaining time
+        var timer: CountDownTimer? = null
         override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
             savedInstanceState: Bundle?
@@ -65,8 +70,15 @@ class HomeFragment : Fragment() {
             cardView = binding.findViewById(R.id.cardworkout)
             skipButton = binding.findViewById(R.id.skipButton)
             schedaLabel = binding.findViewById(R.id.schedaLabel)
+
             skipButton.setOnClickListener {
                 sessionManager.skipWorkout()
+                if (timer != null) {
+                    timer?.onFinish()
+                    timeRemaining = timerDuration
+                    timerTextView.text = "01:00"
+                }
+
             }
 
             val user = FirebaseAuth.getInstance().currentUser
@@ -191,7 +203,7 @@ class HomeFragment : Fragment() {
         allenametoLayout = view.findViewById(R.id.allenametoLayout)
         scanner = view.findViewById(R.id.floatingActionButton2)
         terminaButton = view.findViewById(R.id.terminaButton)
-
+        timerTextView= view.findViewById(R.id.timerTextView)
 
         scanner.setOnClickListener {
             verificaPermessi(requireContext())
@@ -203,12 +215,11 @@ class HomeFragment : Fragment() {
             sessionManager.terminateSession()
         }
 
-        val timerDuration = 60000L // 1 minute in milliseconds
-        val timerTextView: TextView = view.findViewById(R.id.timerTextView)
+
+
         val timerButton: Button = view.findViewById(R.id.timerButton)
-        var timer: CountDownTimer? = null
-        var isTimerRunning = false
-        var timeRemaining = timerDuration // Tracks the remaining time
+
+
         timerTextView.text = "01:00"
         timerButton.text = "Start"
         timerButton.setOnClickListener {
@@ -236,7 +247,9 @@ class HomeFragment : Fragment() {
                         isTimerRunning = false
                         timerButton.text = "Start"
                         timeRemaining = timerDuration // Reset for the next start
+                        timer?.cancel()
                     }
+
                 }.start()
             }
         }
