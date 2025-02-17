@@ -1,6 +1,8 @@
 package com.example.myapplication
 
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.util.Log
@@ -70,15 +72,12 @@ class HomeFragment : Fragment() {
             val user = FirebaseAuth.getInstance().currentUser
             sessionManager = SessionManager(user?.uid ?: "")
 
-            // Listen for session changes in real-time
             listenForSessionChanges()
 
-            // Start QR scan when the scanner button is clicked
             scanner.setOnClickListener {
                 verificaPermessi(requireContext())
             }
 
-            // End session when the termina button is clicked
             terminaButton.setOnClickListener {
                 sessionManager.terminateSession()
                 allenametoLayout.visibility = View.GONE
@@ -109,8 +108,15 @@ class HomeFragment : Fragment() {
                 snapshot?.children?.forEachIndexed { index, dataSnapshot ->
                     val menuItemTitle = dataSnapshot.child("nome").getValue(String::class.java)
                     schede.add(dataSnapshot.getValue(Scheda::class.java)!!)
+                    if (!dataSnapshot.child("workoutList").exists()) {
+                        return@forEachIndexed
+                    }
+
+
+
                     menu.add(0, index, 0, menuItemTitle)
                 }
+                Log.d("DEBUG", "Schede: $schede")
 
                 popupMenu.setOnMenuItemClickListener { item: MenuItem ->
                     val item = schede[item.itemId]
@@ -118,7 +124,7 @@ class HomeFragment : Fragment() {
                     sessionManager.setSessionScheda(item)
                     allenametoLayout.visibility = View.VISIBLE
                     menuButton.visibility = View.GONE
-                    Toast.makeText(requireContext(), "${item.nome} clicked", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "${item.nome} selezionata", Toast.LENGTH_SHORT).show()
                     true
 
 
@@ -140,6 +146,7 @@ class HomeFragment : Fragment() {
                     if (snapshot != null) {
                         if (!snapshot.child("scheda").exists()) {
                             menuButton.visibility = View.VISIBLE
+                            allenametoLayout.visibility = View.GONE
                         }else{
                             menuButton.visibility = View.GONE
                             allenametoLayout.visibility = View.VISIBLE
@@ -148,6 +155,7 @@ class HomeFragment : Fragment() {
                             cardView.findViewById<TextView>(R.id.titoloTextView).text = currentWorkout?.titolo
                             cardView.findViewById<TextView>(R.id.descrizioneTextView).text = currentWorkout?.descrizione
                             schedaLabel.text = "SCHEDA: ${sessionManager.currentScheda?.nome}"
+
                             val imageUrl = currentWorkout?.url
                             if (!imageUrl.isNullOrEmpty()) {
                                 val imageView = cardView.findViewById<ImageView>(R.id.imageView)
@@ -156,6 +164,16 @@ class HomeFragment : Fragment() {
                                     .placeholder(R.drawable.squatbilanciere)
                                     .error(R.drawable.errore_immagine)
                                     .into(imageView)
+                            }
+
+                            cardView.setOnClickListener(){
+                                val videoId = "dQw4w9WgXcQ"  // Replace with your YouTube video ID
+                                if (currentWorkout != null) {
+                                    Log.d("DEBUG", "Video ID: ${currentWorkout.video}")
+                                }
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:${currentWorkout?.video}"))
+                                intent.putExtra(Intent.EXTRA_REFERRER, Uri.parse("android-app://com.google.android.youtube"))
+                                cardView.context.startActivity(intent)
                             }
                         }
                     }
@@ -198,13 +216,13 @@ class HomeFragment : Fragment() {
             if (isTimerRunning) {
                 // Pause the timer
                 isTimerRunning = false
-                timerButton.text = "Resume"
+                timerButton.text = "Riprendi"
                 timer?.cancel() // Stop the current timer but keep the remaining time
             } else {
                 // Start or Resume the timer
 
                 isTimerRunning = true
-                timerButton.text = "Pause"
+                timerButton.text = "Pausa"
 
                 timer = object : CountDownTimer(timeRemaining, 1000) {
                     override fun onTick(millisUntilFinished: Long) {

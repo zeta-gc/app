@@ -18,7 +18,6 @@ class SessionManager(private val userId: String) {
         workoutDatabaseReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 try {
-                    // Trigger the callback with the snapshot if data is successfully retrieved
                     Log.d("SessionManager", "Data retrieved: ${snapshot.value}")
                     if (!snapshot.exists()) {
                         callback(false, null)
@@ -31,7 +30,6 @@ class SessionManager(private val userId: String) {
 
                     callback(true, snapshot)
                 } catch (e: Exception) {
-                    // Handle unexpected errors in processing the snapshot
                     Log.e("SessionManager", "Error processing data: ${e.message}", e)
                     callback(false, null)
                 }
@@ -45,7 +43,6 @@ class SessionManager(private val userId: String) {
         })
     }
 
-    // This function checks the session once (without a listener)
     fun checkSession(callback: (Boolean) -> Unit) {
         workoutDatabaseReference.get().addOnSuccessListener { snapshot ->
             callback(snapshot.exists())
