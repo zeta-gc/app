@@ -1,8 +1,4 @@
 package com.example.myapplication
-
-import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -20,14 +16,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.firebase.ui.database.FirebaseRecyclerAdapter
 import com.firebase.ui.database.FirebaseRecyclerOptions
-import com.google.common.reflect.TypeToken
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import com.google.gson.Gson
 import com.squareup.picasso.Picasso
 
 class InsertWorkoutActivity : AppCompatActivity() {
@@ -91,14 +82,13 @@ class InsertWorkoutActivity : AppCompatActivity() {
             }
             override fun onDataChanged() {
                 super.onDataChanged()
-                loading.visibility = View.GONE // Nascondi il loader quando i dati sono caricati
+                loading.visibility = View.GONE
             }
 
         }
 
         recyclerView.adapter = adapter
 
-        // Gestione del tasto "Indietro" (back)
         val callback: OnBackPressedCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (scheda.workoutList != workoutList) {
@@ -108,7 +98,7 @@ class InsertWorkoutActivity : AppCompatActivity() {
                     builder.setPositiveButton("Si") { _, _ ->
                         scheda.workoutList = workoutList
 
-                        // Aggiorna la lista nel database
+
                         val databaseReference = FirebaseDatabase.getInstance("https://gymapp-48c7e-default-rtdb.europe-west1.firebasedatabase.app/")
                             .getReference("users")
                             .child(userID)
@@ -119,36 +109,35 @@ class InsertWorkoutActivity : AppCompatActivity() {
                         databaseReference.setValue(workoutList)
                             .addOnSuccessListener {
                                 Log.d("DEBUG", "Lista workout aggiornata correttamente.")
-                                finish()  // Chiudi l'attività
+                                finish()
                             }
                             .addOnFailureListener { e ->
                                 Log.e("ERROR", "Errore durante l'aggiornamento della lista: ${e.message}")
                             }
                     }
                     builder.setNegativeButton("No") { dialog, _ ->
-                        dialog.dismiss()  // Chiudi il dialogo senza fare nulla
+                        dialog.dismiss()
                     }
                     builder.show()
                 } else {
-                    finish()  // Se non ci sono workout selezionati, esci direttamente
+                    finish()
                 }
             }
         }
 
-        onBackPressedDispatcher.addCallback(this, callback)  // Aggiungi il callback per il tasto "Indietro"
+        onBackPressedDispatcher.addCallback(this, callback)
     }
 
     override fun onStart() {
         super.onStart()
-        adapter.startListening()  // Inizia l'ascolto dei dati
+        adapter.startListening()
     }
 
     override fun onPause() {
         super.onPause()
-        adapter.stopListening()  // Ferma l'ascolto dei dati
+        adapter.stopListening()
     }
 
-    // ViewHolder per il RecyclerView
     class WorkoutViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val titoloTextView: TextView = itemView.findViewById(R.id.titoloTextView)
         private val descrizioneTextView: TextView = itemView.findViewById(R.id.descrizioneTextView)

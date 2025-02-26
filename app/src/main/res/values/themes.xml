@@ -7,6 +7,8 @@
         <item name="colorPrimary" >@color/orangeMain</item>
         <item name="colorSecondaryContainer">@color/orangeMain</item>
         <item name="colorPrimaryContainer">@color/orangeMain</item>
+        <item name="colorPrimaryVariant">@color/orangeMain</item>
+        <item name="backgroundTint">@color/white</item>
     </style>
 
     <style name="Theme.MyApplication" parent="Base.Theme.MyApplication" />

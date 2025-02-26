@@ -29,14 +29,14 @@
 
     <TextView
         android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="332dp"
+        android:layout_height="17dp"
         android:layout_marginBottom="10dp"
         android:text="Password"
         android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/pass"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.1"
+        app:layout_constraintHorizontal_bias="0.43"
         app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
@@ -60,7 +60,7 @@
         android:backgroundTint="@color/white"
         android:text="Password dimenticata?"
         android:textAlignment="textStart"
-        android:textColor="@color/black"
+        android:textColor="?attr/colorOnSurface"
         android:textSize="15dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.148"

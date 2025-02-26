@@ -51,8 +51,8 @@ class HomeFragment : Fragment() {
         private  lateinit var schedaLabel :TextView
         lateinit var timerTextView: TextView
         var isTimerRunning = false
-        val timerDuration = 60000L // 1 minute in milliseconds
-        var timeRemaining = timerDuration // Tracks the remaining time
+        val timerDuration = 60000L
+        var timeRemaining = timerDuration
         var timer: CountDownTimer? = null
         override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
@@ -103,15 +103,13 @@ class HomeFragment : Fragment() {
     private fun showPopupMenu(view: View) {
         val popupMenu = PopupMenu(requireContext(), view)
 
-        // Get reference to Firebase "schede" node for the current user
         val databaseReference = FirebaseAuth.getInstance().currentUser?.let {
             FirebaseDatabase.getInstance("https://gymapp-48c7e-default-rtdb.europe-west1.firebasedatabase.app/")
                 .getReference("users")
-                .child(it.uid) // Use UID instead of `toString()`
+                .child(it.uid)
                 .child("schede")
         }
 
-        // Fetch data from Firebase
         databaseReference?.get()?.addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 val snapshot = task.result
@@ -142,10 +140,8 @@ class HomeFragment : Fragment() {
 
                 }
 
-                // Show the PopupMenu after adding items
                 popupMenu.show()
             } else {
-                // Handle error if Firebase fetch fails
                 Toast.makeText(requireContext(), "Failed to load data from Firebase", Toast.LENGTH_SHORT).show()
             }
         }
@@ -179,7 +175,7 @@ class HomeFragment : Fragment() {
                             }
 
                             cardView.setOnClickListener(){
-                                val videoId = "dQw4w9WgXcQ"  // Replace with your YouTube video ID
+                                val videoId = "dQw4w9WgXcQ"
                                 if (currentWorkout != null) {
                                     Log.d("DEBUG", "Video ID: ${currentWorkout.video}")
                                 }
@@ -228,16 +224,14 @@ class HomeFragment : Fragment() {
                 // Pause the timer
                 isTimerRunning = false
                 timerButton.text = "Riprendi"
-                timer?.cancel() // Stop the current timer but keep the remaining time
+                timer?.cancel()
             } else {
-                // Start or Resume the timer
-
                 isTimerRunning = true
                 timerButton.text = "Pausa"
 
                 timer = object : CountDownTimer(timeRemaining, 1000) {
                     override fun onTick(millisUntilFinished: Long) {
-                        timeRemaining = millisUntilFinished // Update the remaining time
+                        timeRemaining = millisUntilFinished
                         val seconds = millisUntilFinished / 1000
                         timerTextView.text = String.format("%02d:%02d", seconds / 60, seconds % 60)
                     }
@@ -246,7 +240,7 @@ class HomeFragment : Fragment() {
                         timerTextView.text = "00:00"
                         isTimerRunning = false
                         timerButton.text = "Start"
-                        timeRemaining = timerDuration // Reset for the next start
+                        timeRemaining = timerDuration
                         timer?.cancel()
                     }
 
@@ -262,10 +256,10 @@ class HomeFragment : Fragment() {
             if (task.isSuccessful) {
                 val token = task.result?.token
                 Log.d("qrscanner", "TOKEN! $token")
-                continuation.resume(token) // Restituisce il token
+                continuation.resume(token)
             } else {
                 Log.d("qrscanner", "Errore nel recupero del token")
-                continuation.resume(null) // Restituisce null in caso di errore
+                continuation.resume(null)
             }
         }
     }
@@ -273,7 +267,6 @@ class HomeFragment : Fragment() {
     private fun inviaRichiestaAPI(url: String) {
 
 
-        // Ottieni il token (puoi recuperarlo da Firebase o da una variabile salvata)
         lifecycleScope.launch {
             val token = ottieniToken()
             if (token == null) {
@@ -282,13 +275,12 @@ class HomeFragment : Fragment() {
             }
             val client = okhttp3.OkHttpClient()
             Log.d("qrscanner", "TOKEN $token")
-            // Costruisci la richiesta con il token nell'header
+
             val request = okhttp3.Request.Builder()
                 .url(url)
-                .addHeader("Authorization", "Bearer $token") // Aggiungi il token all'header
+                .addHeader("Authorization", "Bearer $token")
                 .build()
 
-            // Esegui la richiesta in un thread separato
             client.newCall(request).enqueue(object : okhttp3.Callback {
                 override fun onFailure(call: okhttp3.Call, e: IOException) {
                     requireActivity().runOnUiThread {
@@ -331,7 +323,6 @@ class HomeFragment : Fragment() {
         } else {
             val scannedUrl = result.contents
 
-            // Effettua la chiamata all'API
             inviaRichiestaAPI(scannedUrl)
         }
     }

@@ -26,7 +26,6 @@ class ProfileFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_profile, container, false)
     }
 
@@ -44,17 +43,16 @@ class ProfileFragment : Fragment() {
 
             numeroIngressi = view.findViewById(R.id.numeroIngressi)
 
-            // Display the current number of "ingressi" when the fragment is loaded
+
             var ingressi = 0
             nIngressi.get().addOnSuccessListener { snapshot ->
-                ingressi = snapshot.getValue(Int::class.java) ?: 0 // Default to 0 if not found
+                ingressi = snapshot.getValue(Int::class.java) ?: 0
                 numeroIngressi.text = "Numero ingressi: $ingressi"
                 Log.d("Firebase", "Initial ingressi value: $ingressi")
             }
 
             benv.text = "Benvenuto, ${auth.currentUser?.email}"
 
-            // Button to set ingressi to a fixed value
             setIngressiButton = view.findViewById(R.id.setIngressi)
             setIngressiButton.setOnClickListener {
                 ingressi?.let { FirebaseDatabase.getInstance("https://gymapp-48c7e-default-rtdb.europe-west1.firebasedatabase.app/")
@@ -65,10 +63,9 @@ class ProfileFragment : Fragment() {
 
             }
 
-            // Listen for real-time updates to "ingressi"
             nIngressi.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    Log.d("Firebase", "Snapshot exists: ${snapshot.exists()}") // Log to check if data exists
+                    Log.d("Firebase", "Snapshot exists: ${snapshot.exists()}")
                     if (snapshot.exists()) {
                         val ingressi = snapshot.getValue(Int::class.java)
                         if (ingressi != null) {
@@ -88,7 +85,6 @@ class ProfileFragment : Fragment() {
             })
         }
 
-        // Logout functionality
         val logoutBtn: FloatingActionButton = view.findViewById(R.id.logout)
         logoutBtn.setOnClickListener {
             auth.signOut()

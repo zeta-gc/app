@@ -4,4 +4,8 @@
     <color name="white">#FFFFFFFF</color>
     <color name="strokeColor">#E4E4E4</color>
     <color name="orangeMain">#FF8D29</color>
+    <color name="orangeMainDark">#D97706</color>
+    <color name="darkGray">#121212</color>
+    <color name="grayInputBackground">#2A2A2A</color> <!-- Sfondo TextInput più scuro -->
+    <color name="darkerOrange">#C96C14</color> <!-- Arancione più scuro per dark mode -->
 </resources>

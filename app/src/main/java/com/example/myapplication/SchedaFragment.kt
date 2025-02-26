@@ -75,13 +75,13 @@ class SchedaFragment : Fragment() {
                     val fragment = SchedaDetailFragment()
 
                     val bundle = Bundle()
-                    bundle.putSerializable("scheda", model)  // Esempio di dato da passare
+                    bundle.putSerializable("scheda", model)
 
                     fragment.arguments = bundle
 
                     requireActivity().supportFragmentManager.beginTransaction()
                         .replace(R.id.frameLayout, fragment)
-                        .addToBackStack(null)  // Facoltativo, per permettere il back
+                        .addToBackStack(null)
                         .commit()
                 })
                 holder.bind(model)
@@ -174,7 +174,7 @@ class SchedaViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
                     }
             }
             builder.setNegativeButton("No") { dialog, _ ->
-                dialog.dismiss()  // Chiudi il dialogo senza fare nulla
+                dialog.dismiss()
             }
             builder.show()
 

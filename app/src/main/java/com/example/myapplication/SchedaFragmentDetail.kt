@@ -35,7 +35,6 @@ class SchedaDetailFragment : Fragment() {
     private lateinit var userID: String
     private var workoutList = mutableListOf<Workout>()
     private lateinit var fab: FloatingActionButton
-    // Aggiungi il launcher come variabile di classe
     private lateinit var insertWorkoutLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,7 +83,6 @@ class SchedaDetailFragment : Fragment() {
                     loading.visibility = View.GONE
                     if (snapshot.exists()) {
                         workoutList.clear()
-                        // Converte i dati in una lista di oggetti Workout
                         for (dataSnapshot in snapshot.children) {
                             val workout = dataSnapshot.getValue(Workout::class.java)
                             workout?.let {
@@ -93,7 +91,6 @@ class SchedaDetailFragment : Fragment() {
                         }
                         loading.visibility = View.GONE
                         scheda.workoutList = workoutList
-                        // Se la lista è cambiata, aggiorna workoutList
                         Log.d("DEBUG", "Workout list: $workoutList")
                     } else {
                         Log.d("DEBUG", "Nessun workout trovato.")

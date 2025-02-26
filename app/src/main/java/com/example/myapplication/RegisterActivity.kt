@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log // Import the Log class
 import android.widget.Button
@@ -49,7 +50,9 @@ class RegisterActivity: AppCompatActivity() {
                 registerUser(mail, pass,gender, auth) { isSuccess, errorMessage ->
                     if (isSuccess) {
                         Toast.makeText(this, "Registrazione completata", Toast.LENGTH_SHORT).show()
-                        // Navigate to the next activity if needed
+                        val intentLogin = Intent(this, UserProfileActivity::class.java)
+                        startActivity(intentLogin)
+                        finish()
                     } else {
                         Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
                     }
@@ -78,7 +81,7 @@ class RegisterActivity: AppCompatActivity() {
                     auth.currentUser?.sendEmailVerification()
                     val userData = mapOf(
                         "email" to email,
-                        "gender" to gender,// Replace with actual gender
+                        "gender" to gender,
                         "ingressi" to 0
                     )
 
