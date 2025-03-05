@@ -64,3 +64,8 @@ We welcome contributions! To contribute:
 - Commit changes (git commit -m 'Add new feature')
 - Push to the branch (git push origin feature/new-feature)
 - Submit a Pull Request
+
+## **Authors** ##
+- [Gabriele Maria Nigro](https://github.com/zeta-gc)
+- [Edoardo Turano](https://github.com/kbfhr)
+  
