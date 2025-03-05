@@ -36,8 +36,8 @@ GymApp is an Android application developed for a university project. The app all
 ## 🏗 **How to Set Up & Run**  
 1️⃣ **Clone the Repository**  
 ```sh
-git clone https://github.com/yourusername/GymApp.git
-cd GymApp
+git clone https://github.com/zeta-gc/app.git
+cd app
 ```
 2️⃣  **Open in Android Studio**  
 
