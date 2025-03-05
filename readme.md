@@ -26,9 +26,10 @@ Image Loading: Picasso
 QR Code Scanning: ZXing Library
 📱 Screenshots
 Home Screen
-<img src="screenshots/home_screen.png" width="300">
+![image](https://github.com/user-attachments/assets/e061e951-a52e-444c-b052-c5e8adcf7594)
+
 Workout Session
-<img src="screenshots/workout_session.png" width="300">
+![image](https://github.com/user-attachments/assets/524fb20a-e036-4d7e-907b-2feb59e19209)
 📂 Project Structure
 📦 GymApp  
 │── 📁 app  
@@ -77,7 +78,7 @@ Create a new branch (feature/new-feature)
 Commit changes (git commit -m 'Add new feature')
 Push to the branch (git push origin feature/new-feature)
 Submit a Pull Request
-📜 License
+📜 License    
 This project is licensed under the MIT License – see the LICENSE file for details.
 
 💡 Developed for academic purposes as part of a university project. 🚀
